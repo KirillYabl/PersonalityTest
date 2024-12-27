@@ -1,0 +1,11 @@
+[project]
+name = "Personality_test"
+version = "0.1.0"
+description = "Personality test"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "alembic>=1.14.0",
+    "fastapi>=0.115.6",
+    "sqlalchemy>=2.0.36",
+]
