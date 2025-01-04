@@ -11,7 +11,7 @@ from schemas.quiz import QuizIdOut, QuizOut
 from schemas.sqlalchemy import SQLAlchemyOutModel
 from loguru import logger
 
-async def _get_all_children_quizes(quiz_id: UUID, quiz_repository: QuizRepository) -> list[QuizIdOut]:
+async def _get_all_children_quizes(quiz_id: UUID, quiz_repository: SQLAlchemyRepository) -> list[QuizIdOut]:
     """Получить все дочерние тесты от данного.
 
     Работает только с активными тестами. Все неактивные тесты и их дети не будут включены.
@@ -46,12 +46,12 @@ async def _get_all_children_quizes(quiz_id: UUID, quiz_repository: QuizRepositor
     return [QuizIdOut(uuid=quiz_uuid) for quiz_uuid in quiz_children]
 
 class _GetAllChildrenQuizesP(Protocol):
-    async def __call__(quiz_id: UUID, quiz_repository: QuizRepository) -> list[QuizIdOut]:
+    async def __call__(quiz_id: UUID, quiz_repository: SQLAlchemyRepository) -> list[QuizIdOut]:
         ...
 
 async def _get_active_questions_by_quiz_ids(
         quiz_ids: Iterable[UUID], 
-        question_repository: QuizRepository,
+        question_repository: SQLAlchemyRepository,
         order_by: tuple[str],
         out_model: SQLAlchemyOutModel,
     ) -> list[SQLAlchemyOutModel]:
@@ -72,19 +72,20 @@ async def _get_active_questions_by_quiz_ids(
 class _GetActiveQuestionsByQuizIdsP(Protocol):
     async def __call__(
             quiz_ids: Iterable[UUID], 
-            question_repository: QuizRepository, 
+            question_repository: SQLAlchemyRepository, 
             order_by: tuple[str],
             out_model: SQLAlchemyOutModel,
         ) -> list[SQLAlchemyOutModel]:
         ...
 
 @dataclass(frozen=True, kw_only=True, slots=True)
-class QuizQuestionsService:
+class GetQuizQuestionsService:
+    out_model: SQLAlchemyOutModel = QuestionOut
+    
     _quiz_repository: SQLAlchemyRepository = QuizRepository()
     _question_repository: SQLAlchemyRepository = QuestionRepository()
     _get_all_children_quizes: _GetAllChildrenQuizesP = _get_all_children_quizes
     _get_active_questions_by_quiz_ids: _GetActiveQuestionsByQuizIdsP = _get_active_questions_by_quiz_ids
-    _out_model: SQLAlchemyOutModel = QuestionOut
     _order_by: tuple[str] = ("order",)
 
     async def __call__(self, quiz_id: UUID) -> list[SQLAlchemyOutModel]:
@@ -99,7 +100,7 @@ class QuizQuestionsService:
             quiz_ids=quiz_ids, 
             question_repository=self._question_repository,
             order_by=self._order_by,
-            out_model=self._out_model,
+            out_model=self.out_model,
         )
     
-get_quiz_questions_s: QuizQuestionsService = QuizQuestionsService()
+get_quiz_questions_s: GetQuizQuestionsService = GetQuizQuestionsService()

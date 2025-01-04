@@ -3,7 +3,7 @@ from uuid import UUID
 from fastapi import APIRouter, Path
 
 from schemas.sqlalchemy import SQLAlchemyOutModel
-from services.quiz_questions import get_quiz_questions_s
+from services.get_quiz_questions import get_quiz_questions_s
 from loguru import logger
 
 router = APIRouter(
@@ -14,7 +14,7 @@ router = APIRouter(
 @router.get(
     path="/{quiz_uuid}",
     summary="Получить все вопросы теста (включая вопросы дочерних тестов)",
-    response_model=list[get_quiz_questions_s._out_model],
+    response_model=list[get_quiz_questions_s.out_model],
 )
 async def get_quiz_questions(
     quiz_uuid: Annotated[UUID, Path(title="UUID родительского теста")],

@@ -10,7 +10,7 @@ from resources.schema_constants import ServiceFields
 class QuizOut(SQLAlchemyOutModel):
     relationships: ClassVar[tuple[tuple[Relationship]]] = tuple()
 
-    uuid: UUID = Field(..., sorting_field=Quiz.uuid)
+    uuid: UUID = Field(..., **{ServiceFields.SORTING_FIELD: Quiz.uuid})
     parent_id: UUID | None = Field(..., **{ServiceFields.SORTING_FIELD: Quiz.parent_id})
     active: bool = Field(..., **{ServiceFields.SORTING_FIELD: Quiz.active})
 

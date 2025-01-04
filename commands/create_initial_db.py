@@ -1,16 +1,18 @@
-from sqlalchemy import select, func, delete
+from sqlalchemy import select, func, delete, or_
 from loguru import logger
 
 from db.database import get_db_session, get_db_session, transaction
-from db.tables import Question, QuestionTopic, QuestionType, Quiz
+from db.tables import Question, QuestionTopic, QuestionType, Quiz, QuizAttempt, User
 from tests.factories import QuestionTopicFactory, QuizFactory, QuestionTypeFactory, QuestionFactory
 from commands.command import Command
+from tests.factories import UserFactory
 
 class CreateInitialDB(Command):
+    _select_from_models = tuple([Question, Quiz, QuestionTopic, QuestionType, User, QuizAttempt])
     async def run(self) -> None:
         session = await get_db_session()
         async with transaction(session=session):
-            for model in [Question, Quiz, QuestionTopic, QuestionType]:
+            for model in self._select_from_models:
                 result = await session.execute(select(func.count()).select_from(model))
                 logger.info(f"В модели {model.__name__} {result.scalar()} записей.")
 
@@ -160,6 +162,9 @@ class CreateInitialDB(Command):
                     topic=values_question_topic,
                 ))
 
+            user = UserFactory.build(tg_user_id=-1)
+            objects.append(user)
+
             objects.append(persona_test)
             objects.append(character_test)
             objects.append(apprecation_test)
@@ -188,7 +193,7 @@ class CreateInitialDB(Command):
 
             await session.flush()
 
-            for model in [Question, Quiz, QuestionTopic, QuestionType]:
+            for model in self._select_from_models:
                 result = await session.execute(select(func.count()).select_from(model))
                 logger.info(f"В модели {model.__name__} теперь {result.scalar()} записей.")
 
@@ -196,26 +201,30 @@ class CreateInitialDB(Command):
         session = await get_db_session()
         async with transaction(session=session):
 
-            for model in [Question, Quiz, QuestionTopic, QuestionType]:
+            for model in self._select_from_models:
                 result = await session.execute(select(func.count()).select_from(model))
                 logger.info(f"В модели {model.__name__} {result.scalar()} записей.")
 
+            stmt = select(Quiz.uuid).where(Quiz.name.startswith("TEST"))
+            result = await session.execute(stmt)
+            test_quiz_ids = result.scalars()
+
             statements = [
+                delete(QuizAttempt).where(QuizAttempt.quiz_id.in_(test_quiz_ids)),
                 delete(Question).where(Question.text.startswith("TEST")),
                 delete(QuestionType).where(QuestionType.name.startswith("TEST")),
                 delete(QuestionTopic).where(QuestionTopic.name.startswith("TEST")),
                 delete(Quiz).where(Quiz.name.startswith("TEST")),
+                delete(User).where(User.tg_user_id < 0),
             ]
             for statement in statements:
                 await session.execute(statement)
 
             await session.flush()
 
-            for model in [Question, Quiz, QuestionTopic, QuestionType]:
+            for model in self._select_from_models:
                 result = await session.execute(select(func.count()).select_from(model))
                 logger.info(f"В модели {model.__name__} теперь {result.scalar()} записей.")
-            
-                
 
 
 if __name__ == "__main__":

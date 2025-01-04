@@ -11,3 +11,4 @@ wheels/
 
 # sqlite
 database.db
+database.db-journal
