@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 
+from api.router import api_router_v1
+
 def get_application() -> FastAPI:
     application = FastAPI(
         debug=True,
@@ -9,7 +11,4 @@ def get_application() -> FastAPI:
 
 
 app = get_application()
-
-@app.get(path="/")
-async def get_root() -> str:
-    return "Hello world"
+app.include_router(api_router_v1)

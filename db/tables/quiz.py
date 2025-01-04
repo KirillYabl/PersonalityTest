@@ -4,6 +4,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from db.tables.base import BaseModel
 
 class Quiz(BaseModel):
+    # TODO: materialized path
     __tablename__ = "quiz"
 
     name: Mapped[str] = mapped_column(

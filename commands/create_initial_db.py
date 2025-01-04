@@ -1,23 +1,22 @@
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, delete
 from loguru import logger
 
-from db.database import async_session_maker
+from db.database import get_db_session, get_db_session, transaction
 from db.tables import Question, QuestionTopic, QuestionType, Quiz
 from tests.factories import QuestionTopicFactory, QuizFactory, QuestionTypeFactory, QuestionFactory
 from commands.command import Command
 
 class CreateInitialDB(Command):
     async def run(self) -> None:
-        session: AsyncSession
-        async with async_session_maker.begin() as session:
+        session = await get_db_session()
+        async with transaction(session=session):
             for model in [Question, Quiz, QuestionTopic, QuestionType]:
                 result = await session.execute(select(func.count()).select_from(model))
                 logger.info(f"В модели {model.__name__} {result.scalar()} записей.")
 
             objects = []
 
-            persona_test = QuizFactory.build(name="TEST Тест личности")
+            persona_test = QuizFactory.build(name="TEST Тест личности", parent=None)
             character_test = QuizFactory.build(name="TEST Тест характера личности", parent=persona_test)
             apprecation_test = QuizFactory.build(name="TEST Тест на языки признательности", parent=persona_test)
             values_test = QuizFactory.build(name="TEST Тест на ценности", parent=persona_test)
@@ -186,18 +185,17 @@ class CreateInitialDB(Command):
             objects.append(values_question_type)
 
             session.add_all(objects)
-            
-            await session.commit()
 
-        async with async_session_maker.begin() as session:
+            await session.flush()
+
             for model in [Question, Quiz, QuestionTopic, QuestionType]:
                 result = await session.execute(select(func.count()).select_from(model))
                 logger.info(f"В модели {model.__name__} теперь {result.scalar()} записей.")
 
-
     async def unrun(self) -> None:
-        session: AsyncSession
-        async with async_session_maker.begin() as session:
+        session = await get_db_session()
+        async with transaction(session=session):
+
             for model in [Question, Quiz, QuestionTopic, QuestionType]:
                 result = await session.execute(select(func.count()).select_from(model))
                 logger.info(f"В модели {model.__name__} {result.scalar()} записей.")
@@ -210,12 +208,14 @@ class CreateInitialDB(Command):
             ]
             for statement in statements:
                 await session.execute(statement)
-            await session.commit()
 
-        async with async_session_maker.begin() as session:
+            await session.flush()
+
             for model in [Question, Quiz, QuestionTopic, QuestionType]:
                 result = await session.execute(select(func.count()).select_from(model))
                 logger.info(f"В модели {model.__name__} теперь {result.scalar()} записей.")
+            
+                
 
 
 if __name__ == "__main__":
