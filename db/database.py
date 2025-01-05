@@ -19,21 +19,25 @@ async_session_maker = async_sessionmaker(
     expire_on_commit=False,
     autocommit=False,
     autoflush=False,
-    future=True,
 )
 
-
-async def get_db_session() -> AsyncSession:
+@asynccontextmanager
+async def get_db_session() -> AsyncGenerator[AsyncSession, Any, None]:
     db_session = db_session_context.get()
     if db_session:
-        return db_session
+        yield db_session
+        return
     
-    db_session = async_session_maker()
-    db_session_context.set(db_session)
-    try:
-        return db_session
-    finally:
-        await db_session.close()
+    async with async_session_maker() as db_session:
+        try:
+            db_session_context.set(db_session)
+            yield db_session
+        except SQLAlchemyError:
+            await db_session.rollback()
+            raise
+        finally:
+            await db_session.close()
+            db_session_context.set(None)
 
 @asynccontextmanager
 async def transaction(session: AsyncSession) -> AsyncGenerator[None, Any, None]:

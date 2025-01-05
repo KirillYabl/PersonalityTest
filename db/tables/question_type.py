@@ -6,7 +6,7 @@ class QuestionType(BaseModel):
     __tablename__ = "question_type"
 
     name: Mapped[str] = mapped_column(
-        String(50), 
+        String(200), 
         comment="Название типа вопроса",
     )
     params: Mapped[dict] = mapped_column(

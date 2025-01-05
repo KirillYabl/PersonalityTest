@@ -73,27 +73,27 @@ class SQLAlchemyRepository(BaseRepository):
     primary_key_name: str
 
     async def create(self, in_data: SQLAlchemyInModel, out_data: SQLAlchemyOutModel, **kwargs) -> SQLAlchemyOutModel:
-        session = await get_db_session()
-        obj = in_data.to_orm()
+        async with get_db_session() as session:
+            obj = in_data.to_orm()
 
-        async with transaction(session=session):
-            session.add(obj)
-            await session.flush()
-            id = getattr(obj, self.primary_key_name)
+            async with transaction(session=session):
+                session.add(obj)
+                await session.flush()
+                id = getattr(obj, self.primary_key_name)
 
-        return await self.get_by_id(id=id, out_data=out_data)
+            return await self.get_by_id(id=id, out_data=out_data)
     
     async def create_many(self, in_datas: Iterable[InData], out_data: OutData, **kwargs) -> Iterable[OutData]:
         pass
         
     async def update_one(self, id: Id, in_data: BaseModel, out_data: SQLAlchemyOutModel, **kwargs) -> SQLAlchemyOutModel:
-        session = await get_db_session()
-        stmt = update(self.model).where(getattr(self.model, self.primary_key_name)==id).values(**in_data.model_dump())
+        async with get_db_session() as session:
+            stmt = update(self.model).where(getattr(self.model, self.primary_key_name)==id).values(**in_data.model_dump())
 
-        async with transaction(session=session):
-            await session.execute(statement=stmt)
+            async with transaction(session=session):
+                await session.execute(statement=stmt)
 
-        return await self.get_by_id(id=id, out_data=out_data)
+            return await self.get_by_id(id=id, out_data=out_data)
 
     async def update_many(self, in_data: Mapping[Id, InData], out_data: OutData, **kwargs) -> Iterable[OutData]:
         pass
@@ -102,10 +102,10 @@ class SQLAlchemyRepository(BaseRepository):
         pass
 
     async def delete_by_ids(self, ids: Iterable[Id], **kwargs) -> None:
-        session = await get_db_session()
-        stmt = delete(self.model).filter(getattr(self.model, self.primary_key_name).in_(list(ids)))
-        async with transaction(session=session):
-            await session.execute(statement=stmt)
+        async with get_db_session() as session:
+            stmt = delete(self.model).filter(getattr(self.model, self.primary_key_name).in_(list(ids)))
+            async with transaction(session=session):
+                await session.execute(statement=stmt)
 
 
     async def get_by_id(self, id: Id, out_data: SQLAlchemyOutModel, **kwargs) -> SQLAlchemyOutModel | None:
@@ -133,59 +133,59 @@ class SQLAlchemyRepository(BaseRepository):
         :param offset: offset из SQL
         :return: список моделей типа out_data, удовлетворяющих фильтрации
         """        
-        session = await get_db_session()
-        stmt = select(self.model).filter(*filters)
+        async with get_db_session() as session:
+            stmt = select(self.model).filter(*filters)
 
-        relationship_models = {}
-        for relationships in out_data.relationships:
-            for relationship in relationships:
-                relationship_models[relationship.property.mapper.class_.__name__] = relationship.property.mapper.class_
+            relationship_models = {}
+            for relationships in out_data.relationships:
+                for relationship in relationships:
+                    relationship_models[relationship.property.mapper.class_.__name__] = relationship.property.mapper.class_
 
-        if order_by:
-            sorting_fields = []
-            for column_name in order_by:
-                descending = False
-                if column_name.startswith("-"):
-                    column_name = column_name[1:]
-                    descending = True
-                
-                out_data_column = out_data.model_fields.get(column_name)
-                if out_data_column is None:
-                    logger.warning(f"Не удалось сделать сортировку по {column_name} т.к. не найдено в модели")
-                    continue
-                
-                has_json_schema = hasattr(out_data_column, "json_schema_extra")
-                sorting_field = None
-                if has_json_schema:
-                    sorting_field = out_data_column.json_schema_extra.get(ServiceFields.SORTING_FIELD)
+            if order_by:
+                sorting_fields = []
+                for column_name in order_by:
+                    descending = False
+                    if column_name.startswith("-"):
+                        column_name = column_name[1:]
+                        descending = True
+                    
+                    out_data_column = out_data.model_fields.get(column_name)
+                    if out_data_column is None:
+                        logger.warning(f"Не удалось сделать сортировку по {column_name} т.к. не найдено в модели")
+                        continue
+                    
+                    has_json_schema = hasattr(out_data_column, "json_schema_extra")
+                    sorting_field = None
+                    if has_json_schema:
+                        sorting_field = out_data_column.json_schema_extra.get(ServiceFields.SORTING_FIELD)
 
-                if sorting_field is None:
-                    logger.warning(f"Не удалось сделать сортировку по {column_name} т.к. в модели не заданы правила сортировки")
-                    continue
+                    if sorting_field is None:
+                        logger.warning(f"Не удалось сделать сортировку по {column_name} т.к. в модели не заданы правила сортировки")
+                        continue
 
-                if descending:
-                    sorting_field = desc(sorting_field)
+                    if descending:
+                        sorting_field = desc(sorting_field)
 
-                sorting_fields.append(sorting_field)
-            stmt = stmt.order_by(*sorting_fields)
+                    sorting_fields.append(sorting_field)
+                stmt = stmt.order_by(*sorting_fields)
 
-        if limit is not None:
-            stmt = stmt.limit(limit)
+            if limit is not None:
+                stmt = stmt.limit(limit)
 
-        if offset is not None:
-            stmt = stmt.offset(offset)
+            if offset is not None:
+                stmt = stmt.offset(offset)
 
-        if out_data.relationships:
-            for sub_relationships in out_data.relationships:
-                joins = [[relationship_models[sub_relationships[0].property.mapper.class_.__name__], sub_relationships[0]]]
-                options = joinedload(sub_relationships[0])
-                for sub_relationship in sub_relationships[1:]:
-                    options = options.joinedload(sub_relationship)
-                    joins.append([relationship_models[sub_relationship.property.mapper.class_.__name__], sub_relationship])
-                stmt = stmt.options(options)
-                for j in joins:
-                    stmt = stmt.join(*j)
+            if out_data.relationships:
+                for sub_relationships in out_data.relationships:
+                    joins = [[relationship_models[sub_relationships[0].property.mapper.class_.__name__], sub_relationships[0]]]
+                    options = joinedload(sub_relationships[0])
+                    for sub_relationship in sub_relationships[1:]:
+                        options = options.joinedload(sub_relationship)
+                        joins.append([relationship_models[sub_relationship.property.mapper.class_.__name__], sub_relationship])
+                    stmt = stmt.options(options)
+                    for j in joins:
+                        stmt = stmt.join(*j)
 
-        result = await session.execute(statement=stmt)
+            result = await session.execute(statement=stmt)
 
-        return [out_data.from_orm(model_obj=row[0]) for row in result.fetchall()]
+            return [out_data.from_orm(model_obj=row[0]) for row in result.fetchall()]
