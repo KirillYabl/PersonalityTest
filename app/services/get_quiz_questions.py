@@ -4,7 +4,7 @@ from typing import Iterable, Protocol
 from uuid import UUID
 
 from db.tables import Question, Quiz
-from schemas.questions import QuestionOut
+from schemas.question import QuestionOut
 from db.repositories import QuestionRepository, QuizRepository
 from db.repositories.base import SQLAlchemyRepository
 from schemas.quiz import QuizIdOut, QuizOut
@@ -50,16 +50,17 @@ class _GetAllChildrenQuizesP(Protocol):
         ...
 
 async def _get_active_questions_by_quiz_ids(
-        quiz_ids: Iterable[UUID], 
-        question_repository: SQLAlchemyRepository,
-        order_by: tuple[str],
-        out_model: SQLAlchemyOutModel,
-    ) -> list[SQLAlchemyOutModel]:
+    quiz_ids: Iterable[UUID], 
+    question_repository: SQLAlchemyRepository,
+    order_by: tuple[str],
+    out_model: SQLAlchemyOutModel,
+) -> list[SQLAlchemyOutModel]:
     """Получить активные вопросы по тестам.
 
     :param quiz_ids: перечень тестов, в которых искать вопросы, неактивные будут игнорироваться
     :param question_repository: репозиторий вопросов
     :param order_by: поля сортировки, могут быть пустым кортежем
+    :param out_model: модель для результатов
     :return: список вопросов
     """        
     filters = (
@@ -71,11 +72,11 @@ async def _get_active_questions_by_quiz_ids(
 
 class _GetActiveQuestionsByQuizIdsP(Protocol):
     async def __call__(
-            quiz_ids: Iterable[UUID], 
-            question_repository: SQLAlchemyRepository, 
-            order_by: tuple[str],
-            out_model: SQLAlchemyOutModel,
-        ) -> list[SQLAlchemyOutModel]:
+        quiz_ids: Iterable[UUID], 
+        question_repository: SQLAlchemyRepository, 
+        order_by: tuple[str],
+        out_model: SQLAlchemyOutModel,
+    ) -> list[SQLAlchemyOutModel]:
         ...
 
 @dataclass(frozen=True, kw_only=True, slots=True)
