@@ -12,15 +12,11 @@ from schemas.quiz_attempt import QuizAttemptIdOut, QuizAttemptIn
 from schemas.sqlalchemy import SQLAlchemyOutModel
 from schemas.user import UserIdOut
 
-async def _get_user_by_tg_id(tg_user_id: int, user_repository: SQLAlchemyRepository) -> UserIdOut | None:
-    filters = (
-        User.tg_user_id == tg_user_id,
-    )
-    users = await user_repository.get_many(*filters, out_data=UserIdOut)
-    return users[0] if users else None
+async def _get_user_by_id(user_id: UUID, user_repository: SQLAlchemyRepository) -> UserIdOut | None:
+    return await user_repository.get_by_id(user_id, out_data=UserIdOut)
 
-class _GetUserByTgIdP(Protocol):
-    async def __call__(tg_user_id: int, user_repository: SQLAlchemyRepository) -> UserIdOut | None:
+class _GetUserByIdP(Protocol):
+    async def __call__(user_id: UUID, user_repository: SQLAlchemyRepository) -> UserIdOut | None:
         ...
 
 async def _create_quiz_attempt(
@@ -51,16 +47,16 @@ class CreateQuizAttemptService:
     _quiz_repository: SQLAlchemyRepository = QuizRepository()
     _quiz_attempt_repository: SQLAlchemyRepository = QuizAttemptRepository()
     _user_repository: SQLAlchemyRepository = UserRepository()
-    _get_user_by_tg_id: _GetUserByTgIdP = _get_user_by_tg_id
+    _get_user_by_id: _GetUserByIdP = _get_user_by_id
     _create_quiz_attempt: _CreateQuizAttemptP = _create_quiz_attempt
     _exceptions_group_class: ServiceExceptionGroup = ServiceExceptionGroup
 
-    async def __call__(self, quiz_id: UUID, tg_user_id: int) -> SQLAlchemyOutModel:
+    async def __call__(self, quiz_id: UUID, user_id: UUID) -> SQLAlchemyOutModel:
         _exceptions_group = self._exceptions_group_class("Ошибки в сервисе CreateQuizAttemptService", [ValueError()])
 
-        user = await self._get_user_by_tg_id(tg_user_id=tg_user_id, user_repository=self._user_repository)
+        user = await self._get_user_by_id(user_id=user_id, user_repository=self._user_repository)
         if user is None:
-            _exceptions_group.add_error(UserNotFoundByTgIdException(details=f"Пользователь с tg_id={tg_user_id} не найден."))
+            _exceptions_group.add_error(UserNotFoundByTgIdException(details=f"Пользователь с user_id={str(user_id)} не найден."))
         
         quiz = await self._quiz_repository.get_by_id(id=quiz_id, out_data=QuizIdOut)
         if quiz is None:

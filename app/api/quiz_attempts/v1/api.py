@@ -18,6 +18,6 @@ router = APIRouter(
     response_model=create_quiz_attempt_s.out_model,
 )
 async def create_quiz_attempt(data: CreateQuizAttemptIn) -> list[SQLAlchemyOutModel]:
-    result = await create_quiz_attempt_s(quiz_id=data.quiz_uuid, tg_user_id=data.tg_user_id)
+    result = await create_quiz_attempt_s(quiz_id=data.quiz_uuid, user_id=data.user_uuid)
     logger.trace(f"Результаты: {result}")
     return result
