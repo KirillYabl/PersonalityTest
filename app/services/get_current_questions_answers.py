@@ -1,45 +1,15 @@
-from collections import defaultdict
 from dataclasses import dataclass
-from typing import Iterable, Protocol
+from typing import Protocol
 from uuid import UUID
 
 from schemas.question_answer import QuestionAnswerQuestionIdValueOut
-from db.tables import Question, QuestionAnswer, Quiz, QuizAttempt
-from schemas.question import QuestionOut
-from db.repositories import QuestionAnswerRepository, QuestionRepository, QuizAttemptRepository, QuizRepository
+from db.tables import QuestionAnswer
+from db.repositories import QuestionAnswerRepository, QuizAttemptRepository
 from db.repositories.base import SQLAlchemyRepository
-from schemas.quiz import QuizIdOut, QuizOut
-from schemas.quiz_attempt import QuizAttemptIdDatesOut
 from schemas.sqlalchemy import SQLAlchemyOutModel
 from loguru import logger
 
-async def _get_last_attempt_for_user(
-    user_uuid: UUID, 
-    quiz_attempt_repository: SQLAlchemyRepository,
-) -> QuizAttemptIdDatesOut | None:
-    """Получить последнюю попытку прохождения юзером
-
-    :param user_uuid: идентификатор юзера
-    :param quiz_attempt_repository: репозиторий попыток прохождения
-    :return: последняя попытка или None
-    """
-    filters = (
-        QuizAttempt.user_id == user_uuid,
-    )
-    last_attempt = await quiz_attempt_repository.get_many(
-        *filters, 
-        out_data=QuizAttemptIdDatesOut, 
-        order_by=("-created_at",), 
-        limit=1,
-    )
-    return last_attempt[0] if last_attempt else None
-
-class _GetLastAttemptForUserP(Protocol):
-    async def __call__(
-        user_uuid: UUID, 
-        quiz_attempt_repository: SQLAlchemyRepository,
-    ) -> QuizAttemptIdDatesOut | None:
-        ...
+from selects.quiz_attempt import GetLastAttemptForUserP, get_last_attempt_for_user
 
 async def _get_answers_for_questions_by_attempt(
     quiz_attempt_uuid: UUID,
@@ -75,7 +45,7 @@ class GetCurrentQuestionsAnswersService:
     
     _quiz_attempt_repository: SQLAlchemyRepository = QuizAttemptRepository()
     _question_answer_repository: SQLAlchemyRepository = QuestionAnswerRepository()
-    _get_last_attempt_for_user: _GetLastAttemptForUserP = _get_last_attempt_for_user
+    _get_last_attempt_for_user: GetLastAttemptForUserP = get_last_attempt_for_user
     _get_answers_for_questions_by_attempt: _GetAnswersForQuestionsByAttemptP = _get_answers_for_questions_by_attempt
     _order_by: tuple[str] = tuple()
 

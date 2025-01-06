@@ -1,11 +1,9 @@
-from typing import Annotated
-from uuid import UUID
-from fastapi import APIRouter, Path
+from fastapi import APIRouter
+from loguru import logger
 
 from api.quiz_attempts.v1.schema import CreateQuizAttemptIn
 from schemas.sqlalchemy import SQLAlchemyOutModel
 from services.create_quiz_attempt import create_quiz_attempt_s
-from loguru import logger
 
 router = APIRouter(
     tags=["Попытки прохождения тестов"],

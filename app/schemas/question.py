@@ -20,7 +20,8 @@ class QuestionOut(SQLAlchemyOutModel):
     type_name: str = Field(..., **{ServiceFields.SORTING_FIELD: QuestionType.name})
     required: bool = Field(..., **{ServiceFields.SORTING_FIELD: QuestionType.params["required"]})
     default: bool | str | int | None =  Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["default"]})
-    type_type: str =  Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["type"]})
+    answer_type: str =  Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["answer_type"]})
+    multiple_answers: bool =  Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["multiple_answers"]})
     min_value: int | None =  Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["min_value"]})
     max_value: int | None =  Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["max_value"]})
     topic_name: str = Field(..., **{ServiceFields.SORTING_FIELD: QuestionTopic.name})
@@ -35,9 +36,31 @@ class QuestionOut(SQLAlchemyOutModel):
             type_name=model_obj.type.name,
             required=model_obj.type.params.get("required"),
             default=model_obj.type.params.get("default"),
-            type_type=model_obj.type.params.get("type"),
+            answer_type=model_obj.type.params.get("answer_type"),
+            multiple_answers=model_obj.type.params.get("multiple_answers"),
             min_value=model_obj.type.params.get("min_value"),
             max_value=model_obj.type.params.get("max_value"),
             topic_name=model_obj.topic.name,
             order=model_obj.order,
+        )
+    
+class QuestionTypeInfoOut(SQLAlchemyOutModel):
+    relationships: ClassVar[tuple[tuple[Relationship]]] = (
+        (Question.type,),
+    )
+
+    uuid: UUID = Field(..., **{ServiceFields.SORTING_FIELD: Question.uuid})
+    answer_type: str =  Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["answer_type"]})
+    multiple_answers: bool =  Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["multiple_answers"]})
+    min_value: int | None =  Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["min_value"]})
+    max_value: int | None =  Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["max_value"]})
+
+    @classmethod
+    def from_orm(cls, model_obj: Question) -> "QuestionTypeInfoOut":
+        return cls(
+            uuid=model_obj.uuid,
+            answer_type=model_obj.type.params.get("answer_type"),
+            multiple_answers=model_obj.type.params.get("multiple_answers"),
+            min_value=model_obj.type.params.get("min_value"),
+            max_value=model_obj.type.params.get("max_value"),
         )

@@ -1,9 +1,9 @@
-from typing import TypeVar
+from typing import Any, TypeVar
 from collections.abc import Iterable, Mapping
 from abc import ABC, abstractmethod
 from venv import logger
 
-from sqlalchemy import BinaryExpression, BooleanClauseList, desc, select, update, delete
+from sqlalchemy import BinaryExpression, BooleanClauseList, desc, insert, select, update, delete
 from sqlalchemy.orm import joinedload, aliased
 from pydantic import BaseModel
 
@@ -83,17 +83,30 @@ class SQLAlchemyRepository(BaseRepository):
 
             return await self.get_by_id(id=id, out_data=out_data)
     
-    async def create_many(self, in_datas: Iterable[InData], out_data: OutData, **kwargs) -> Iterable[OutData]:
-        pass
-        
-    async def update_one(self, id: Id, in_data: BaseModel, out_data: SQLAlchemyOutModel, **kwargs) -> SQLAlchemyOutModel:
+    async def create_many(self, in_datas: Iterable[Mapping[str, Any]], out_data: SQLAlchemyOutModel | None, **kwargs) -> Iterable[OutData]:
         async with get_db_session() as session:
-            stmt = update(self.model).where(getattr(self.model, self.primary_key_name)==id).values(**in_data.model_dump())
-
             async with transaction(session=session):
-                await session.execute(statement=stmt)
-
-            return await self.get_by_id(id=id, out_data=out_data)
+                if out_data is None:
+                    await session.execute(
+                        insert(self.model),
+                        in_datas,
+                    )
+                    return []
+                else:
+                    scalars = await session.scalars(
+                        insert(self.model).returning(getattr(self.model, self.primary_key_name)),
+                        in_datas,
+                    )
+                    objects_ids = scalars.all()
+            filters = (
+                getattr(self.model, self.primary_key_name).in_(objects_ids)
+            )
+            return await self.get_many(*filters, out_data=out_data)
+            
+                    
+        
+    async def update_one(self, id: Id, in_data: InData, out_data: OutData, **kwargs) -> OutData:
+        pass
 
     async def update_many(self, in_data: Mapping[Id, InData], out_data: OutData, **kwargs) -> Iterable[OutData]:
         pass

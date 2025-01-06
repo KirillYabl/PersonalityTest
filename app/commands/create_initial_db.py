@@ -2,13 +2,13 @@ from sqlalchemy import select, func, delete, or_
 from loguru import logger
 
 from db.database import get_db_session, get_db_session, transaction
-from db.tables import Question, QuestionTopic, QuestionType, Quiz, QuizAttempt, User
+from db.tables import Question, QuestionAnswer, QuestionTopic, QuestionType, Quiz, QuizAttempt, User
 from tests.factories import QuestionTopicFactory, QuizFactory, QuestionTypeFactory, QuestionFactory
 from commands.command import Command
 from tests.factories import UserFactory
 
 class CreateInitialDB(Command):
-    _select_from_models = tuple([Question, Quiz, QuestionTopic, QuestionType, User, QuizAttempt])
+    _select_from_models = tuple([Question, Quiz, QuestionTopic, QuestionType, User, QuizAttempt, QuestionAnswer])
     async def run(self) -> None:
         async with get_db_session() as session:
             async with transaction(session=session):
@@ -47,7 +47,8 @@ class CreateInitialDB(Command):
                     params={
                         "required": True,
                         "default": None,
-                        "type": "unique choice",
+                        "multiple_answers": False,
+                        "answer_type": "integer",
                         "min_value": 1,
                         "max_value": 5,
                     },
@@ -57,7 +58,8 @@ class CreateInitialDB(Command):
                     params={
                         "required": False,
                         "default": False,
-                        "type": "boolean",
+                        "multiple_answers": False,
+                        "answer_type": "boolean",
                     },
                 )
                 values_question_type = QuestionTypeFactory.build(
@@ -65,7 +67,8 @@ class CreateInitialDB(Command):
                     params={
                         "required": True,
                         "default": None,
-                        "type": "unique choice",
+                        "multiple_answers": False,
+                        "answer_type": "integer",
                         "min_value": 0,
                         "max_value": 2,
                     },
@@ -207,9 +210,14 @@ class CreateInitialDB(Command):
 
                 stmt = select(Quiz.uuid).where(Quiz.name.startswith("TEST"))
                 result = await session.execute(stmt)
-                test_quiz_ids = result.scalars()
+                test_quiz_ids = result.scalars().all()
+
+                stmt = select(QuizAttempt.uuid).where(QuizAttempt.quiz_id.in_(test_quiz_ids))
+                result = await session.execute(stmt)
+                test_quiz_attempt_ids = result.scalars().all()
 
                 statements = [
+                    delete(QuestionAnswer).where(QuestionAnswer.attempt_id.in_(test_quiz_attempt_ids)),
                     delete(QuizAttempt).where(QuizAttempt.quiz_id.in_(test_quiz_ids)),
                     delete(Question).where(Question.text.startswith("TEST")),
                     delete(QuestionType).where(QuestionType.name.startswith("TEST")),

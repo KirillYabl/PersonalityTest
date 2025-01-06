@@ -6,3 +6,9 @@ class UserNotFoundByTgIdException(ServiceException):
 
 class QuizNotFoundByIdException(ServiceException):
     err_code = 1002
+
+class QuizAttemptNotFoundException(ServiceException):
+    err_code = 1003
+
+class InvalidAnswersException(ServiceException):
+    err_code = 1004
