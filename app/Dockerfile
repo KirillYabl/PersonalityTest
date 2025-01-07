@@ -12,6 +12,8 @@ ADD . /app
 
 WORKDIR /app
 
+ENV UV_PROJECT_ENVIRONMENT="/usr/local/"
+
 RUN uv sync --frozen
 
 CMD ["uv", "run", "fastapi", "dev", "main.py", "--host", "0.0.0.0", "--port", "8000"]

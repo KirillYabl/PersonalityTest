@@ -10,7 +10,7 @@ from core.config import settings
 from core.contextvars import db_session_context
 
 async_engine = create_async_engine(
-    url=settings.SQLALCHEMY_DATABASE_URL,
+    url=settings.SQLALCHEMY_DATABASE_URL.get_secret_value(),
     pool_pre_ping=True,
 )
 

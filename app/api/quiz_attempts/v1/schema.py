@@ -3,4 +3,3 @@ from pydantic import BaseModel, Field
 
 class CreateQuizAttemptIn(BaseModel):
     quiz_uuid: UUID = Field(..., title="UUID родительского теста")
-    user_uuid: UUID = Field(..., title="UUID пользователя")

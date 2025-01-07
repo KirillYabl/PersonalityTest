@@ -1,8 +1,10 @@
 from typing import Annotated
 from uuid import UUID
-from fastapi import APIRouter, Path
+from fastapi import APIRouter, Depends, Path
 
+from core.jwt_auth import get_current_user
 from schemas.sqlalchemy import SQLAlchemyOutModel
+from schemas.user import UserIdOut
 from services.get_quiz_questions import get_quiz_questions_s
 from loguru import logger
 
@@ -18,6 +20,7 @@ router = APIRouter(
 )
 async def get_quiz_questions(
     quiz_uuid: Annotated[UUID, Path(title="UUID родительского теста")],
+    user: UserIdOut = Depends(get_current_user),
 ) -> list[SQLAlchemyOutModel]:
     result = await get_quiz_questions_s(quiz_id=quiz_uuid)
     logger.trace(f"Результаты: {result}")
