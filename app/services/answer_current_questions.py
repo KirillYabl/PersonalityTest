@@ -56,6 +56,7 @@ async def _validate_answers(answers: list[_CurrentQuestionAnswerDTO], question_r
                     )
                     has_errors = True
                     errors[i] = suberrors
+                    continue
 
                 if isinstance(question.min_value, int) and answer.value < question.min_value:
                     suberrors.append(
@@ -169,7 +170,7 @@ class AnswerCurrentQuestionsService:
 
     _exceptions_group_class: type[ServiceExceptionGroup] = ServiceExceptionGroup
 
-    async def __call__(self, user_uuid: UUID, answers: list[BaseModel]) -> SQLAlchemyOutModel:
+    async def __call__(self, user_uuid: UUID, quiz_uuid: UUID, answers: list[BaseModel]) -> SQLAlchemyOutModel:
         _exceptions_group = self._exceptions_group_class("Ошибки в сервисе CreateQuizAttemptService", [ValueError()])
         logger.info("Начинаю работу сервиса")
 
@@ -193,6 +194,7 @@ class AnswerCurrentQuestionsService:
         logger.info(f"Нахожу последнюю попытку прохождения для юзера {user_uuid=}")
         last_attempt = await self._get_last_attempt_for_user(
             user_uuid=user_uuid, 
+            quiz_uuid=quiz_uuid,
             quiz_attempt_repository=self._quiz_attempt_repository,
         )
         if not last_attempt:

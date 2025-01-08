@@ -49,10 +49,11 @@ class GetCurrentQuestionsAnswersService:
     _get_answers_for_questions_by_attempt: _GetAnswersForQuestionsByAttemptP = _get_answers_for_questions_by_attempt
     _order_by: tuple[str] = tuple()
 
-    async def __call__(self, user_uuid: UUID) -> list[SQLAlchemyOutModel]:
-        logger.debug(f"Нахожу последнюю попытку прохождения для юзера {user_uuid=}")
+    async def __call__(self, user_uuid: UUID, quiz_uuid: UUID) -> list[SQLAlchemyOutModel]:
+        logger.debug(f"Нахожу последнюю попытку прохождения для юзера {user_uuid=}, {quiz_uuid=}")
         last_attempt = await self._get_last_attempt_for_user(
             user_uuid=user_uuid, 
+            quiz_uuid=quiz_uuid,
             quiz_attempt_repository=self._quiz_attempt_repository,
         )
         if not last_attempt:
