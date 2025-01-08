@@ -15,6 +15,7 @@ class SettingsSchema(BaseSettings):
     POSTGRES_DB: SecretStr
 
     TELEGRAM_BOT_TOKEN: SecretStr
+    WEBAPP_URL: str
 
     APP_SECRET_KEY: SecretStr
     ACCESS_TOKEN_ALGORITHM: str = "HS256"
