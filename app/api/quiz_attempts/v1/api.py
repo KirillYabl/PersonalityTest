@@ -13,7 +13,7 @@ router = APIRouter(
 )
 
 @router.post(
-    path="/",
+    path="",
     summary="Создать попытку прохождения теста для юзера",
     response_model=create_quiz_attempt_s.out_model,
 )

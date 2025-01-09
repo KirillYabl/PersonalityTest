@@ -5,6 +5,7 @@ from fastapi.templating import Jinja2Templates
 
 from api.router import api_router_v1
 from core.errors_base import ServiceExceptionGroup
+from core.config import settings
 
 def get_application() -> FastAPI:
     application = FastAPI(
@@ -30,4 +31,4 @@ async def service_exception_handler(request: Request, exc_group: ServiceExceptio
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse("index.html", {"request": request, "quiz_uuid": settings.QUIZ_UUID})

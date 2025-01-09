@@ -1,19 +1,27 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telegram Mini App</title>
-    <link rel="stylesheet" href="/static/css/styles.css">
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="/static/js/app.js" defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Telegram Quiz</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="/static/js/token.js" defer></script>
+  <script src="/static/js/questions.js" defer></script>
+  <script src="/static/js/app.js" defer></script>
 </head>
 <body>
-    <h1>Аутентификация через Telegram Mini App</h1>
-    <p id="status">Инициализация...</p>
-    <p><strong>Токен:</strong> <span id="token">-</span></p>
-    <p><strong>Расшифровка:</strong> <span id="decoded-token">-</span></p>
-    <p><strong>Ошибки:</strong></p>
-    <pre id="errors">-</pre>
+  <div class="app-container">
+    <header class="app-header">
+      <h1 id="quiz-title">Тест Telegram</h1>
+      <div class="progress-bar">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+    </header>
+    <main id="questions-container" class="questions-container">
+        <p hidden id="quiz-uuid">{{ quiz_uuid }}</p>
+      <!-- Вопросы будут загружены сюда -->
+    </main>
+  </div>
 </body>
 </html>

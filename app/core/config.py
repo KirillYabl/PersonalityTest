@@ -21,6 +21,8 @@ class SettingsSchema(BaseSettings):
     ACCESS_TOKEN_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_SECONDS: int = 60 * 60 * 24
 
+    QUIZ_UUID: str
+
     SQLALCHEMY_DATABASE_URL: SecretStr | None = None
     SQLALCHEMY_DATABASE_URL_FOR_ALEMBIC: SecretStr | None = None
 
