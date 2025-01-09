@@ -12,3 +12,9 @@ class QuizAttemptNotFoundException(ServiceException):
 
 class InvalidAnswersException(ServiceException):
     err_code = 1004
+
+class QuizAttemptAlreadyHasResultException(ServiceException):
+    err_code = 1005
+
+class QuizAttemptNotAllQuestionsAnsweredException(ServiceException):
+    err_code = 1006

@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends
+from typing import Annotated
+from uuid import UUID
+from fastapi import APIRouter, Depends, Path
 from loguru import logger
 
 from api.quiz_attempts.v1.schema import CreateQuizAttemptIn
@@ -6,6 +8,7 @@ from core.jwt_auth import get_current_user
 from schemas.sqlalchemy import SQLAlchemyOutModel
 from schemas.user import UserIdOut
 from services.create_quiz_attempt import create_quiz_attempt_s
+from services.complete_quiz_current_attempt import complete_quiz_current_attempt_s
 
 router = APIRouter(
     tags=["Попытки прохождения тестов"],
@@ -22,5 +25,18 @@ async def create_quiz_attempt(
     user: UserIdOut = Depends(get_current_user),
 ) -> list[SQLAlchemyOutModel]:
     result = await create_quiz_attempt_s(quiz_id=data.quiz_uuid, user_id=user.uuid)
+    logger.trace(f"Результаты: {result}")
+    return result
+
+@router.post(
+    path="/current/complete/{quiz_uuid}",
+    summary="Закончить прохождение теста по последней попытке",
+    response_model=complete_quiz_current_attempt_s.out_model,
+)
+async def complete_quiz_current_attempt(
+    quiz_uuid: Annotated[UUID, Path(title="UUID теста")],
+    user: UserIdOut = Depends(get_current_user),
+) -> list[SQLAlchemyOutModel]:
+    result = await complete_quiz_current_attempt_s(quiz_uuid=quiz_uuid, user_uuid=user.uuid)
     logger.trace(f"Результаты: {result}")
     return result

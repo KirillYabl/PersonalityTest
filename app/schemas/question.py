@@ -64,3 +64,14 @@ class QuestionTypeInfoOut(SQLAlchemyOutModel):
             min_value=model_obj.type.params.get("min_value"),
             max_value=model_obj.type.params.get("max_value"),
         )
+    
+class QuestionIdOut(SQLAlchemyOutModel):
+    relationships: ClassVar[tuple[tuple[Relationship]]] = tuple()
+
+    uuid: UUID = Field(..., **{ServiceFields.SORTING_FIELD: Question.uuid})
+
+    @classmethod
+    def from_orm(cls, model_obj: Question) -> "QuestionIdOut":
+        return cls(
+            uuid=model_obj.uuid,
+        )

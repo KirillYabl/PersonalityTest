@@ -160,10 +160,8 @@ class AnswerCurrentQuestionsService:
     _question_answer_repository: SQLAlchemyRepository = QuestionAnswerRepository()
     _quiz_attempt_repository: SQLAlchemyRepository = QuizAttemptRepository()
     _question_repository: SQLAlchemyRepository = QuestionRepository()
-    _user_repository: SQLAlchemyRepository = UserRepository()
 
     _validate_answers: _ValidateAnswersP = _validate_answers
-    _get_user_by_id: GetUserByIdP = get_user_by_id
     _get_last_attempt_for_user: GetLastAttemptForUserP = get_last_attempt_for_user
     _delete_old_answers: _DeleteOldAnswersP = _delete_old_answers
     _insert_answers: _InsertAnswersP = _insert_answers
@@ -183,13 +181,6 @@ class AnswerCurrentQuestionsService:
             _exceptions_group.add_error(InvalidAnswersException(details=errors))
             logger.info("Валидация прошла с ошибками")
             logger.debug(f"Ошибки валидации ответов: {errors}")
-
-        logger.info("Проверяю пользователя")
-        user = await self._get_user_by_id(user_id=user_uuid, user_repository=self._user_repository)
-        if user is None:
-            _exceptions_group.add_error(UserNotFoundByTgIdException(details=f"Пользователь с user_id={str(user_uuid)} не найден."))
-            _exceptions_group.raise_if_not_empty()
-        logger.info("Пользователь найден")
 
         logger.info(f"Нахожу последнюю попытку прохождения для юзера {user_uuid=}")
         last_attempt = await self._get_last_attempt_for_user(
