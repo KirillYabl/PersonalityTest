@@ -1,3 +1,4 @@
+from uuid import UUID
 from sqlalchemy import String, Boolean, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -23,6 +24,12 @@ class Quiz(BaseModel):
         index=True, 
         comment="Признак активности теста",
     )
+    type_id: Mapped[str | None] = mapped_column(
+        ForeignKey("quiz_type.uuid"),
+        nullable=True,
+        unique=True,
+        comment="Тип теста",
+    )
 
     parent = relationship(
         "Quiz", 
@@ -37,4 +44,9 @@ class Quiz(BaseModel):
         "QuizAttempt", 
         back_populates="quiz", 
         cascade="all, delete",
+    )
+    type = relationship(
+        "QuizType",
+        back_populates="quiz",
+        uselist=False,
     )

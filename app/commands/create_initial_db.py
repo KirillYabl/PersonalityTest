@@ -2,13 +2,13 @@ from sqlalchemy import select, func, delete, or_
 from loguru import logger
 
 from db.database import get_db_session, get_db_session, transaction
-from db.tables import Question, QuestionAnswer, QuestionTopic, QuestionType, Quiz, QuizAttempt, User
-from tests.factories import QuestionTopicFactory, QuizFactory, QuestionTypeFactory, QuestionFactory
+from db.tables import Question, QuestionAnswer, QuestionTopic, QuestionType, Quiz, QuizAttempt, User, QuizType
+from tests.factories import QuestionTopicFactory, QuizFactory, QuestionTypeFactory, QuestionFactory, QuizTypeFactory
 from commands.command import Command
 from tests.factories import UserFactory
 
 class CreateInitialDB(Command):
-    _select_from_models = tuple([Question, Quiz, QuestionTopic, QuestionType, User, QuizAttempt, QuestionAnswer])
+    _select_from_models = tuple([Question, Quiz, QuestionTopic, QuestionType, User, QuizAttempt, QuestionAnswer, QuizType])
     async def run(self) -> None:
         async with get_db_session() as session:
             async with transaction(session=session):
@@ -18,7 +18,9 @@ class CreateInitialDB(Command):
 
                 objects = []
 
-                persona_test = QuizFactory.build(name="TEST Тест личности", parent=None)
+                personality_test_type = QuizTypeFactory.build(name="PersonalityTest")
+
+                persona_test = QuizFactory.build(name="TEST Тест личности", parent=None, type=personality_test_type)
                 character_test = QuizFactory.build(name="TEST Тест характера личности", parent=persona_test)
                 apprecation_test = QuizFactory.build(name="TEST Тест на языки признательности", parent=persona_test)
                 values_test = QuizFactory.build(name="TEST Тест на ценности", parent=persona_test)
@@ -168,6 +170,7 @@ class CreateInitialDB(Command):
                 user = UserFactory.build(tg_user_id=-1)
                 objects.append(user)
 
+                objects.append(personality_test_type)
                 objects.append(persona_test)
                 objects.append(character_test)
                 objects.append(apprecation_test)

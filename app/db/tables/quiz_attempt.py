@@ -30,3 +30,9 @@ class QuizAttempt(BaseModel):
         back_populates="attempt", 
         cascade="all, delete",
     )
+    result = relationship(
+        "QuizResult",
+        back_populates="attempt",
+        uselist=False,
+        cascade="all, delete",
+    )
