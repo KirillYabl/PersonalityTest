@@ -1,4 +1,4 @@
-from sqlalchemy import select, func, delete, or_
+from sqlalchemy import select, func, delete
 from loguru import logger
 
 from db.database import get_db_session, get_db_session, transaction
@@ -19,11 +19,14 @@ class CreateInitialDB(Command):
                 objects = []
 
                 personality_test_type = QuizTypeFactory.build(name="PersonalityTest")
+                personality_character_test_type = QuizTypeFactory.build(name="PersonalityCharacterTest")
+                personality_apprecation_test_type = QuizTypeFactory.build(name="PersonalityApprecationTest")
+                personality_values_test_type = QuizTypeFactory.build(name="PersonalityValuesTest")
 
                 persona_test = QuizFactory.build(name="TEST Тест личности", parent=None, type=personality_test_type)
-                character_test = QuizFactory.build(name="TEST Тест характера личности", parent=persona_test)
-                apprecation_test = QuizFactory.build(name="TEST Тест на языки признательности", parent=persona_test)
-                values_test = QuizFactory.build(name="TEST Тест на ценности", parent=persona_test)
+                character_test = QuizFactory.build(name="TEST Тест характера личности", parent=persona_test, type=personality_character_test_type)
+                apprecation_test = QuizFactory.build(name="TEST Тест на языки признательности", parent=persona_test, type=personality_apprecation_test_type)
+                values_test = QuizFactory.build(name="TEST Тест на ценности", parent=persona_test, type=personality_values_test_type)
 
                 character_topic_openness = QuestionTopicFactory.build(name="TEST Открытость")
                 character_topic_consciousness = QuestionTopicFactory.build(name="TEST Сознательность")

@@ -65,7 +65,7 @@ async def _create_quiz_result(
     )
     return await quiz_result_repository.create(in_data=in_data, out_data=out_model)
 
-class _CreateQuizResult(Protocol):
+class _CreateQuizResultP(Protocol):
     async def __call__(
         attempt_uuid: UUID,
         out_model: SQLAlchemyOutModel,
@@ -109,7 +109,7 @@ async def _check_all_questions_of_attempt_answered(
 
     return not_answered_questions
 
-class _CheckAllQuestionsOfAttemptAnswered(Protocol):
+class _CheckAllQuestionsOfAttemptAnsweredP(Protocol):
     async def __call__(
         quiz_uuid: UUID,
         attempt_uuid: UUID, 
@@ -130,12 +130,12 @@ class CompleteQuizCurrentAttemptService:
     _get_last_attempt_for_user: GetLastAttemptForUserP = get_last_attempt_for_user
     _get_quiz_questions_service: GetQuizQuestionsService = get_quiz_questions_s
     _get_quiz_result_by_attempt: _GetQuizResultByAttemptP = _get_quiz_result_by_attempt
-    _create_quiz_result: _CreateQuizResult = _create_quiz_result
-    _check_all_questions_of_attempt_answered: _CheckAllQuestionsOfAttemptAnswered = _check_all_questions_of_attempt_answered
+    _create_quiz_result: _CreateQuizResultP = _create_quiz_result
+    _check_all_questions_of_attempt_answered: _CheckAllQuestionsOfAttemptAnsweredP = _check_all_questions_of_attempt_answered
     _exceptions_group_class: type[ServiceExceptionGroup] = ServiceExceptionGroup
 
     async def __call__(self, quiz_uuid: UUID, user_uuid: UUID) -> SQLAlchemyOutModel:
-        _exceptions_group = self._exceptions_group_class("Ошибки в сервисе CreateQuizAttemptService", [ValueError()])
+        _exceptions_group = self._exceptions_group_class("Ошибки в сервисе CompleteQuizCurrentAttemptService", [ValueError()])
 
         logger.info(f"Нахожу последнюю попытку прохождения для юзера {user_uuid=}, {quiz_uuid=}")
         last_attempt = await self._get_last_attempt_for_user(
@@ -164,6 +164,7 @@ class CompleteQuizCurrentAttemptService:
             quiz_uuid=quiz_uuid,
             attempt_uuid=last_attempt.uuid, 
             question_answer_repository=self._question_answer_repository,
+            get_quiz_questions_service=self._get_quiz_questions_service,
         )
         if not_answered_questions:
             details = {
@@ -178,7 +179,6 @@ class CompleteQuizCurrentAttemptService:
             attempt_uuid=last_attempt.uuid, 
             out_model=self.out_model, 
             quiz_result_repository=self._quiz_result_repository,
-            get_quiz_questions_service=self._get_quiz_questions_service,
         )
     
 complete_quiz_current_attempt_s: CompleteQuizCurrentAttemptService = CompleteQuizCurrentAttemptService()

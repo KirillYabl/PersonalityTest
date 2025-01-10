@@ -169,7 +169,7 @@ class AnswerCurrentQuestionsService:
     _exceptions_group_class: type[ServiceExceptionGroup] = ServiceExceptionGroup
 
     async def __call__(self, user_uuid: UUID, quiz_uuid: UUID, answers: list[BaseModel]) -> SQLAlchemyOutModel:
-        _exceptions_group = self._exceptions_group_class("Ошибки в сервисе CreateQuizAttemptService", [ValueError()])
+        _exceptions_group = self._exceptions_group_class("Ошибки в сервисе AnswerCurrentQuestionsService", [ValueError()])
         logger.info("Начинаю работу сервиса")
 
         answers = [_CurrentQuestionAnswerDTO(**answer.model_dump()) for answer in answers]

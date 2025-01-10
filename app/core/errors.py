@@ -18,3 +18,9 @@ class QuizAttemptAlreadyHasResultException(ServiceException):
 
 class QuizAttemptNotAllQuestionsAnsweredException(ServiceException):
     err_code = 1006
+
+class QuizResultNotFoundException(ServiceException):
+    err_code = 1007
+
+class NotAllQuizTypesCalculatedError(ServiceException):
+    err_code = 1008

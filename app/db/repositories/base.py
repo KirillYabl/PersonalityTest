@@ -4,12 +4,12 @@ from abc import ABC, abstractmethod
 from venv import logger
 
 from sqlalchemy import BinaryExpression, BooleanClauseList, desc, insert, select, update, delete
-from sqlalchemy.orm import joinedload, aliased
+from sqlalchemy.orm import joinedload
 from pydantic import BaseModel
 
 from resources.schema_constants import ServiceFields
 from schemas.sqlalchemy import SQLAlchemyInModel, SQLAlchemyOutModel
-from db.database import get_db_session, get_db_session, transaction
+from db.database import get_db_session, transaction
 from db.tables.base import BaseModel as SQLBaseModel
 
 InData = TypeVar("InData")  # входные данные (список фильтров или значения полей и т.д.)
@@ -36,7 +36,7 @@ class BaseRepository(ABC):
         """Создать много записей."""
 
     @abstractmethod
-    async def update_one(self, id: Id, in_data: InData, out_data: OutData, **kwargs) -> OutData:
+    async def update_one(self, id: Id, in_data: InData, out_data: OutData | None, **kwargs) -> OutData | None:
         """Обновить одну запись.
         
         Идентификатор передается отдельно, т.к. это не данные для обновления.
@@ -73,9 +73,8 @@ class SQLAlchemyRepository(BaseRepository):
     primary_key_name: str
 
     async def create(self, in_data: SQLAlchemyInModel, out_data: SQLAlchemyOutModel, **kwargs) -> SQLAlchemyOutModel:
+        obj = in_data.to_orm()
         async with get_db_session() as session:
-            obj = in_data.to_orm()
-
             async with transaction(session=session):
                 session.add(obj)
                 await session.flush()
@@ -105,8 +104,15 @@ class SQLAlchemyRepository(BaseRepository):
             
                     
         
-    async def update_one(self, id: Id, in_data: InData, out_data: OutData, **kwargs) -> OutData:
-        pass
+    async def update_one(self, id: Id, in_data: BaseModel, out_data: SQLAlchemyOutModel | None, **kwargs) -> SQLAlchemyOutModel | None:
+        stmt = update(self.model).filter(getattr(self.model, self.primary_key_name) == id).values(**in_data.model_dump())
+        async with get_db_session() as session:
+            async with transaction(session=session):
+                await session.execute(statement=stmt)
+            if out_data is None:
+                return None
+            return await self.get_by_id(id=id, out_data=out_data)
+                
 
     async def update_many(self, in_data: Mapping[Id, InData], out_data: OutData, **kwargs) -> Iterable[OutData]:
         pass
@@ -115,8 +121,8 @@ class SQLAlchemyRepository(BaseRepository):
         pass
 
     async def delete_by_ids(self, ids: Iterable[Id], **kwargs) -> None:
+        stmt = delete(self.model).filter(getattr(self.model, self.primary_key_name).in_(list(ids)))
         async with get_db_session() as session:
-            stmt = delete(self.model).filter(getattr(self.model, self.primary_key_name).in_(list(ids)))
             async with transaction(session=session):
                 await session.execute(statement=stmt)
 
