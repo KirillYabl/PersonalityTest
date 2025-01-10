@@ -11,3 +11,8 @@ class ResultStatus:
     IN_PROCESS = "IN_PROCESS"
     ERROR = "ERROR"
     DONE = "DONE"
+
+class QuizTypeName:
+    PERSONALITY_CHARACTER = "PersonalityCharacterTest"
+    PERSONALITY_APPRECATION = "PersonalityApprecationTest"
+    PERSONALITY_VALUES = "PersonalityValuesTest"

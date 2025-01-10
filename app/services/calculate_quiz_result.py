@@ -8,7 +8,7 @@ from core.errors_base import ServiceExceptionGroup
 from core.types import JSON
 from db.repositories.quiz_result import QuizResultRepository
 from db.tables import QuestionAnswer, Quiz
-from resources.schema_constants import ResultStatus
+from resources.schema_constants import QuizTypeName, ResultStatus
 from schemas.question import QuestionOut
 from db.repositories import QuestionAnswerRepository, QuestionRepository, QuizRepository
 from db.repositories.base import SQLAlchemyRepository
@@ -58,7 +58,7 @@ async def _calculate_quizes_results(
     quiz_type_question_answers_mapping = {answer.question_id: answer.answer_value for answer in quiz_type_question_answers}
     match quiz.type_name:
 
-        case "PersonalityCharacterTest":
+        case QuizTypeName.PERSONALITY_CHARACTER:
             # принцип расчета, вычислить нормированный на 1 балл 
             # по каждой категории (топику), как сумма всех на сумму максимальных баллов
             temp_result = defaultdict(lambda: defaultdict(int))
@@ -72,7 +72,7 @@ async def _calculate_quizes_results(
             for question_type, value in temp_result.items():
                 result[question_type] = value["points"] / value["max_points"]
 
-        case "PersonalityApprecationTest":
+        case QuizTypeName.PERSONALITY_APPRECATION:
             # принцип расчета, по каждой категории вычислить баллы и найти 2 категории с максимальным числом баллов
             temp_result = defaultdict(int)
             for question in quiz_type_questions:
@@ -83,7 +83,7 @@ async def _calculate_quizes_results(
             pick_first_n_appreciations = 2
             result = sorted(temp_result, key=lambda question_type: temp_result[question_type], reverse=True)[:pick_first_n_appreciations]
 
-        case "PersonalityValuesTest":
+        case QuizTypeName.PERSONALITY_VALUES:
             # принцип расчета, по каждой категории вычислить баллы и найти 2 категории с максимальным числом баллов
             temp_result = defaultdict(int)
             for question in quiz_type_questions:
@@ -145,9 +145,9 @@ class CalculateQuizResultService:
     _calculate_quizes_results: _CalculateQuizesResultsP = _calculate_quizes_results
     _record_quiz_result: _RecordQuizResultP = _record_quiz_result
     _expected_quiz_types: tuple[str] = (
-        "PersonalityCharacterTest",
-        "PersonalityApprecationTest",
-        "PersonalityValuesTest",
+        QuizTypeName.PERSONALITY_CHARACTER,
+        QuizTypeName.PERSONALITY_APPRECATION,
+        QuizTypeName.PERSONALITY_VALUES,
     )
     _exceptions_group_class: type[ServiceExceptionGroup] = ServiceExceptionGroup
 

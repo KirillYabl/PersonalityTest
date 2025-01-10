@@ -18,6 +18,22 @@ class QuizResultIdOut(SQLAlchemyOutModel):
             uuid=model_obj.uuid,
         )
     
+class QuizResultOut(SQLAlchemyOutModel):
+    relationships: ClassVar[tuple[tuple[Relationship]]] = tuple()
+
+    uuid: UUID = Field(..., **{ServiceFields.SORTING_FIELD: QuizResult.uuid})
+    attempt_id: UUID = Field(..., **{ServiceFields.SORTING_FIELD: QuizResult.attempt_id})
+    data: dict[str, Any] | None = Field(..., **{ServiceFields.SORTING_FIELD: QuizResult.data})
+
+
+    @classmethod
+    def from_orm(cls, model_obj: QuizResult) -> "QuizResultOut":
+        return cls(
+            uuid=model_obj.uuid,
+            attempt_id=model_obj.attempt_id,
+            data=model_obj.data,
+        )
+    
 
 class QuizResultWithAttemptAndQuizIdsOut(SQLAlchemyOutModel):
     relationships: ClassVar[tuple[tuple[Relationship]]] = (
