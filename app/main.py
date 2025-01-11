@@ -1,3 +1,4 @@
+from uuid import UUID
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -32,3 +33,7 @@ async def service_exception_handler(request: Request, exc_group: ServiceExceptio
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request) -> HTMLResponse:
     return templates.TemplateResponse("index.html", {"request": request, "quiz_uuid": settings.QUIZ_UUID})
+
+@app.get("/result", response_class=HTMLResponse)
+async def read_root(request: Request, quiz_result_uuid: UUID) -> HTMLResponse:
+    return templates.TemplateResponse("result.html", {"request": request, "quiz_uuid": settings.QUIZ_UUID, "quiz_result_uuid": quiz_result_uuid})

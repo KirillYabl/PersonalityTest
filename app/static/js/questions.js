@@ -182,9 +182,9 @@ function checkNextButtonState() {
 }
 
 // Функция для завершения теста
-function completeTest() {
-  alert("Тест завершен!");
-  // Добавьте логику для завершения теста (например, отправка данных или редирект)
+async function completeTest() {
+  var result = await completeCurrentQuiz();
+  window.location.assign(`/result?quiz_result_uuid=${result.uuid}`);
 }
 
 // Переход на предыдущую страницу
@@ -260,7 +260,6 @@ async function startNewAttempt() {
     headers: {
       "Authorization": `Bearer ${token}`,
       "Content-Type": "application/json",
-      "accept": "application/json",
     },
     body: JSON.stringify(body),
   });
@@ -269,4 +268,25 @@ async function startNewAttempt() {
     throw new Error(`Ошибка ${response.status}: ${response.statusText}`);
   }
   const data = await response.json();
+}
+
+async function completeCurrentQuiz() {
+  const token = getToken();
+  const completeCurrentQuiz = `${window.location.protocol}//${window.location.host}/api/v1/quiz_attempts/complete/${quizUUID}`;
+  const body = {}
+
+  const response = await fetch(completeCurrentQuiz, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Ошибка ${response.status}: ${response.statusText}`);
+  }
+  const data = await response.json();
+  return data
 }

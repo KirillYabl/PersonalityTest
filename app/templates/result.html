@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Кольца</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="/static/js/token.js" defer></script>
+  <script src="/static/js/result.js" defer></script>
+  <script src="/static/js/resultInitialize.js" defer></script>
+</head>
+<body>
+  <div class="vertical">
+  <div class="result-container vertical" id="result-container">
+    <p hidden id="quiz-uuid">{{ quiz_uuid }}</p>
+    <p hidden id="quiz-result-uuid">{{ quiz_result_uuid }}</p>
+    <canvas id="matrixCanvas"></canvas>
+  </div>
+  <div class="button-container">
+    <button class="finish-button" type="button" onclick="location.href='/'">Пройти еще раз.</button>
+  </div>
+  </div>
+</body>
+</html>

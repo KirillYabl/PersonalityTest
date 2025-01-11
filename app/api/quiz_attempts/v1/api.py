@@ -31,7 +31,7 @@ async def create_quiz_attempt(
     return result
 
 @router.post(
-    path="/current/complete/{quiz_uuid}",
+    path="/complete/{quiz_uuid}",
     summary="Закончить прохождение теста по последней попытке",
     response_model=complete_quiz_current_attempt_s.out_model,
 )

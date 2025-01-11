@@ -15,7 +15,7 @@ class StartTgBot(Command):
             keyboard = InlineKeyboardMarkup(inline_keyboard=[[button]])
             await message.answer("Нажмите кнопку ниже, чтобы открыть Mini App:", reply_markup=keyboard)
         
-        bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
+        bot = Bot(token=settings.TELEGRAM_BOT_TOKEN.get_secret_value())
         await dp.start_polling(bot)
 
     async def unrun(self) -> None:
