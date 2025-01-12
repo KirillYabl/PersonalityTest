@@ -1,17 +1,16 @@
 from typing import Annotated
 from uuid import UUID
+
 from fastapi import APIRouter, Depends, Path
+from loguru import logger
 
 from core.jwt_auth import get_current_user
 from schemas.sqlalchemy import SQLAlchemyOutModel
 from schemas.user import UserIdOut
 from services.get_quiz_questions import get_quiz_questions_s
-from loguru import logger
 
-router = APIRouter(
-    tags=["Вопросы тестов"],
-    prefix="/questions"
-)
+router = APIRouter(tags=["Вопросы тестов"], prefix="/questions")
+
 
 @router.get(
     path="/{quiz_uuid}",

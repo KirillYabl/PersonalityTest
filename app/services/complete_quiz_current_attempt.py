@@ -5,7 +5,11 @@ from uuid import UUID
 from loguru import logger
 
 from api.questions.v1.api import get_quiz_questions_s
-from core.errors import QuizAttemptAlreadyHasResultException, QuizAttemptNotAllQuestionsAnsweredException, QuizAttemptNotFoundException
+from core.errors import (
+    QuizAttemptAlreadyHasResultException,
+    QuizAttemptNotAllQuestionsAnsweredException,
+    QuizAttemptNotFoundException,
+)
 from core.errors_base import ServiceExceptionGroup
 from db.repositories import QuestionAnswerRepository, QuizAttemptRepository
 from db.repositories.base import SQLAlchemyRepository
@@ -19,6 +23,7 @@ from schemas.sqlalchemy import SQLAlchemyOutModel
 from selects.quiz_attempt import GetLastAttemptForUserP, get_last_attempt_for_user
 from services.get_quiz_questions import GetQuizQuestionsService
 
+
 async def _get_quiz_result_by_attempt(
     attempt_uuid: UUID,
     quiz_result_repository: SQLAlchemyRepository,
@@ -28,19 +33,18 @@ async def _get_quiz_result_by_attempt(
     :param attempt_uuid: идентификатор попытки прохождения теста
     :param quiz_result_repository: репозиторий результатов теста
     :return: идентификатор результата или None
-    """    
-    filters = (
-        QuizResult.attempt_id == attempt_uuid,
-    )
+    """
+    filters = (QuizResult.attempt_id == attempt_uuid,)
     results = await quiz_result_repository.get_many(*filters, out_data=QuizResultIdOut, limit=1)
     return results[0] if results else None
+
 
 class _GetQuizResultByAttemptP(Protocol):
     async def __call__(
         attempt_uuid: UUID,
         quiz_result_repository: SQLAlchemyRepository,
-    ) -> SQLAlchemyOutModel | None:
-        ...
+    ) -> SQLAlchemyOutModel | None: ...
+
 
 async def _create_quiz_result(
     attempt_uuid: UUID,
@@ -56,7 +60,7 @@ async def _create_quiz_result(
     :param out_model: модель, в которой будут отданы данные
     :param quiz_result_repository: репозиторий результатов теста
     :return: данные результата в модели out_model
-    """    
+    """
     in_data = QuizResultIn(
         attempt_id=attempt_uuid,
         data={
@@ -65,17 +69,18 @@ async def _create_quiz_result(
     )
     return await quiz_result_repository.create(in_data=in_data, out_data=out_model)
 
+
 class _CreateQuizResultP(Protocol):
     async def __call__(
         attempt_uuid: UUID,
         out_model: SQLAlchemyOutModel,
         quiz_result_repository: SQLAlchemyRepository,
-    ) -> SQLAlchemyOutModel:
-        ...
+    ) -> SQLAlchemyOutModel: ...
+
 
 async def _check_all_questions_of_attempt_answered(
     quiz_uuid: UUID,
-    attempt_uuid: UUID, 
+    attempt_uuid: UUID,
     question_answer_repository: SQLAlchemyRepository,
     get_quiz_questions_service: GetQuizQuestionsService,
 ) -> list[QuestionOut]:
@@ -88,13 +93,13 @@ async def _check_all_questions_of_attempt_answered(
     :param question_answer_repository: репозиторий ответов на вопросы
     :param get_quiz_questions_service: сервис по получению активных вопросов теста
     :return: список вопросов, на которые не были даны ответы
-    """    
+    """
     questions = await get_quiz_questions_service(quiz_id=quiz_uuid)
-    filters = (
-        QuestionAnswer.attempt_id == attempt_uuid,
-    )
+    filters = (QuestionAnswer.attempt_id == attempt_uuid,)
     question_answers = await question_answer_repository.get_many(*filters, out_data=QuestionAnswerQuestionIdValueOut)
-    question_answer_value_mapping = {question_answer.question_id: question_answer.answer_value for question_answer in question_answers}
+    question_answer_value_mapping = {
+        question_answer.question_id: question_answer.answer_value for question_answer in question_answers
+    }
 
     not_answered_questions = []
     for question in questions:
@@ -109,15 +114,14 @@ async def _check_all_questions_of_attempt_answered(
 
     return not_answered_questions
 
+
 class _CheckAllQuestionsOfAttemptAnsweredP(Protocol):
     async def __call__(
         quiz_uuid: UUID,
-        attempt_uuid: UUID, 
+        attempt_uuid: UUID,
         question_answer_repository: SQLAlchemyRepository,
         get_quiz_questions_service: GetQuizQuestionsService,
-    ) -> list[QuestionOut]:
-        ...
-
+    ) -> list[QuestionOut]: ...
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -131,38 +135,46 @@ class CompleteQuizCurrentAttemptService:
     _get_quiz_questions_service: GetQuizQuestionsService = get_quiz_questions_s
     _get_quiz_result_by_attempt: _GetQuizResultByAttemptP = _get_quiz_result_by_attempt
     _create_quiz_result: _CreateQuizResultP = _create_quiz_result
-    _check_all_questions_of_attempt_answered: _CheckAllQuestionsOfAttemptAnsweredP = _check_all_questions_of_attempt_answered
+    _check_all_questions_of_attempt_answered: _CheckAllQuestionsOfAttemptAnsweredP = (
+        _check_all_questions_of_attempt_answered
+    )
     _exceptions_group_class: type[ServiceExceptionGroup] = ServiceExceptionGroup
 
     async def __call__(self, quiz_uuid: UUID, user_uuid: UUID) -> SQLAlchemyOutModel:
-        _exceptions_group = self._exceptions_group_class("Ошибки в сервисе CompleteQuizCurrentAttemptService", [ValueError()])
+        _exceptions_group = self._exceptions_group_class(
+            "Ошибки в сервисе CompleteQuizCurrentAttemptService", [ValueError()]
+        )
 
         logger.info(f"Нахожу последнюю попытку прохождения для юзера {user_uuid=}, {quiz_uuid=}")
         last_attempt = await self._get_last_attempt_for_user(
-            user_uuid=user_uuid, 
+            user_uuid=user_uuid,
             quiz_uuid=quiz_uuid,
             quiz_attempt_repository=self._quiz_attempt_repository,
         )
         if not last_attempt:
-            _exceptions_group.add_error(QuizAttemptNotFoundException(
-                details=f"Не найдено попыток прохождения для пользователя user_uuid={str(user_uuid)}"),
+            _exceptions_group.add_error(
+                QuizAttemptNotFoundException(
+                    details=f"Не найдено попыток прохождения для пользователя user_uuid={str(user_uuid)}"
+                ),
             )
             _exceptions_group.raise_if_not_empty()
         logger.info(f"Последняя попытка прохождения для юзера {last_attempt=}")
 
         result = await self._get_quiz_result_by_attempt(
-            attempt_uuid=last_attempt.uuid, 
+            attempt_uuid=last_attempt.uuid,
             quiz_result_repository=self._quiz_result_repository,
         )
         if result:
-            _exceptions_group.add_error(QuizAttemptAlreadyHasResultException(
-                details=f"Для попытки attempt_uuid={str(last_attempt.uuid)} уже есть результат"),
+            _exceptions_group.add_error(
+                QuizAttemptAlreadyHasResultException(
+                    details=f"Для попытки attempt_uuid={str(last_attempt.uuid)} уже есть результат"
+                ),
             )
             _exceptions_group.raise_if_not_empty()
 
         not_answered_questions = await self._check_all_questions_of_attempt_answered(
             quiz_uuid=quiz_uuid,
-            attempt_uuid=last_attempt.uuid, 
+            attempt_uuid=last_attempt.uuid,
             question_answer_repository=self._question_answer_repository,
             get_quiz_questions_service=self._get_quiz_questions_service,
         )
@@ -176,9 +188,10 @@ class CompleteQuizCurrentAttemptService:
         _exceptions_group.raise_if_not_empty()
 
         return await self._create_quiz_result(
-            attempt_uuid=last_attempt.uuid, 
-            out_model=self.out_model, 
+            attempt_uuid=last_attempt.uuid,
+            out_model=self.out_model,
             quiz_result_repository=self._quiz_result_repository,
         )
-    
+
+
 complete_quiz_current_attempt_s: CompleteQuizCurrentAttemptService = CompleteQuizCurrentAttemptService()

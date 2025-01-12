@@ -1,4 +1,4 @@
-local-api-run: 
+local-api-run:
 	uv run fastapi dev main.py
 
 local-migrations:

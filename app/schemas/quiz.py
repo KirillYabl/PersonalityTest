@@ -1,16 +1,16 @@
 from typing import ClassVar
 from uuid import UUID
+
 from pydantic import Field
 from sqlalchemy.orm import Relationship
 
 from db.tables import Quiz
-from schemas.sqlalchemy import SQLAlchemyOutModel
 from resources.schema_constants import ServiceFields
+from schemas.sqlalchemy import SQLAlchemyOutModel
+
 
 class QuizOut(SQLAlchemyOutModel):
-    relationships: ClassVar[tuple[tuple[Relationship]]] = (
-        (Quiz.type,),
-    )
+    relationships: ClassVar[tuple[tuple[Relationship]]] = ((Quiz.type,),)
 
     uuid: UUID = Field(..., **{ServiceFields.SORTING_FIELD: Quiz.uuid})
     parent_id: UUID | None = Field(..., **{ServiceFields.SORTING_FIELD: Quiz.parent_id})
@@ -27,7 +27,8 @@ class QuizOut(SQLAlchemyOutModel):
             name=model_obj.name,
             type_name=model_obj.type.name,
         )
-    
+
+
 class QuizIdOut(SQLAlchemyOutModel):
     relationships: ClassVar[tuple[tuple[Relationship]]] = tuple()
 

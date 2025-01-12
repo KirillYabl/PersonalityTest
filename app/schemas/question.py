@@ -1,11 +1,13 @@
 from typing import ClassVar
 from uuid import UUID
+
 from pydantic import Field
 from sqlalchemy.orm import Relationship
 
 from db.tables import Question, QuestionTopic, QuestionType, Quiz
 from resources.schema_constants import ServiceFields
 from schemas.sqlalchemy import SQLAlchemyOutModel
+
 
 class QuestionOut(SQLAlchemyOutModel):
     relationships: ClassVar[tuple[tuple[Relationship]]] = (
@@ -19,11 +21,11 @@ class QuestionOut(SQLAlchemyOutModel):
     quiz_name: str = Field(..., **{ServiceFields.SORTING_FIELD: Quiz.name})
     type_name: str = Field(..., **{ServiceFields.SORTING_FIELD: QuestionType.name})
     required: bool = Field(..., **{ServiceFields.SORTING_FIELD: QuestionType.params["required"]})
-    default: bool | str | int | None =  Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["default"]})
-    answer_type: str =  Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["answer_type"]})
-    multiple_answers: bool =  Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["multiple_answers"]})
-    min_value: int | None =  Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["min_value"]})
-    max_value: int | None =  Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["max_value"]})
+    default: bool | str | int | None = Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["default"]})
+    answer_type: str = Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["answer_type"]})
+    multiple_answers: bool = Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["multiple_answers"]})
+    min_value: int | None = Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["min_value"]})
+    max_value: int | None = Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["max_value"]})
     topic_name: str = Field(..., **{ServiceFields.SORTING_FIELD: QuestionTopic.name})
     order: int = Field(..., **{ServiceFields.SORTING_FIELD: Question.order})
 
@@ -43,17 +45,16 @@ class QuestionOut(SQLAlchemyOutModel):
             topic_name=model_obj.topic.name,
             order=model_obj.order,
         )
-    
+
+
 class QuestionTypeInfoOut(SQLAlchemyOutModel):
-    relationships: ClassVar[tuple[tuple[Relationship]]] = (
-        (Question.type,),
-    )
+    relationships: ClassVar[tuple[tuple[Relationship]]] = ((Question.type,),)
 
     uuid: UUID = Field(..., **{ServiceFields.SORTING_FIELD: Question.uuid})
-    answer_type: str =  Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["answer_type"]})
-    multiple_answers: bool =  Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["multiple_answers"]})
-    min_value: int | None =  Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["min_value"]})
-    max_value: int | None =  Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["max_value"]})
+    answer_type: str = Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["answer_type"]})
+    multiple_answers: bool = Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["multiple_answers"]})
+    min_value: int | None = Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["min_value"]})
+    max_value: int | None = Field(None, **{ServiceFields.SORTING_FIELD: QuestionType.params["max_value"]})
 
     @classmethod
     def from_orm(cls, model_obj: Question) -> "QuestionTypeInfoOut":
@@ -64,7 +65,8 @@ class QuestionTypeInfoOut(SQLAlchemyOutModel):
             min_value=model_obj.type.params.get("min_value"),
             max_value=model_obj.type.params.get("max_value"),
         )
-    
+
+
 class QuestionIdOut(SQLAlchemyOutModel):
     relationships: ClassVar[tuple[tuple[Relationship]]] = tuple()
 

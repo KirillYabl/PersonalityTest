@@ -1,9 +1,9 @@
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from functools import wraps
-from typing import Any, Generator
+from typing import Any
+
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.ext.asyncio.session import AsyncSession
 
 from core.config import settings
@@ -21,13 +21,14 @@ async_session_maker = async_sessionmaker(
     autoflush=False,
 )
 
+
 @asynccontextmanager
 async def get_db_session() -> AsyncGenerator[AsyncSession, Any, None]:
     db_session = db_session_context.get()
     if db_session:
         yield db_session
         return
-    
+
     async with async_session_maker() as db_session:
         try:
             db_session_context.set(db_session)
@@ -38,6 +39,7 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, Any, None]:
         finally:
             await db_session.close()
             db_session_context.set(None)
+
 
 @asynccontextmanager
 async def transaction(session: AsyncSession) -> AsyncGenerator[None, Any, None]:

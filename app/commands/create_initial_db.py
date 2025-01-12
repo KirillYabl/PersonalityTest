@@ -1,14 +1,24 @@
-from sqlalchemy import select, func, delete
 from loguru import logger
+from sqlalchemy import delete, func, select
 
-from db.database import get_db_session, get_db_session, transaction
-from db.tables import Question, QuestionAnswer, QuestionTopic, QuestionType, Quiz, QuizAttempt, User, QuizType
-from tests.factories import QuestionTopicFactory, QuizFactory, QuestionTypeFactory, QuestionFactory, QuizTypeFactory
 from commands.command import Command
-from tests.factories import UserFactory
+from db.database import get_db_session, transaction
+from db.tables import Question, QuestionAnswer, QuestionTopic, QuestionType, Quiz, QuizAttempt, QuizType, User
+from tests.factories import (
+    QuestionFactory,
+    QuestionTopicFactory,
+    QuestionTypeFactory,
+    QuizFactory,
+    QuizTypeFactory,
+    UserFactory,
+)
+
 
 class CreateInitialDB(Command):
-    _select_from_models = tuple([Question, Quiz, QuestionTopic, QuestionType, User, QuizAttempt, QuestionAnswer, QuizType])
+    _select_from_models = tuple(
+        [Question, Quiz, QuestionTopic, QuestionType, User, QuizAttempt, QuestionAnswer, QuizType]
+    )
+
     async def run(self) -> None:
         async with get_db_session() as session:
             async with transaction(session=session):
@@ -24,9 +34,17 @@ class CreateInitialDB(Command):
                 personality_values_test_type = QuizTypeFactory.build(name="PersonalityValuesTest")
 
                 persona_test = QuizFactory.build(name="TEST Тест личности", parent=None, type=personality_test_type)
-                character_test = QuizFactory.build(name="TEST Тест характера личности", parent=persona_test, type=personality_character_test_type)
-                apprecation_test = QuizFactory.build(name="TEST Тест на языки признательности", parent=persona_test, type=personality_apprecation_test_type)
-                values_test = QuizFactory.build(name="TEST Тест на ценности", parent=persona_test, type=personality_values_test_type)
+                character_test = QuizFactory.build(
+                    name="TEST Тест характера личности", parent=persona_test, type=personality_character_test_type
+                )
+                apprecation_test = QuizFactory.build(
+                    name="TEST Тест на языки признательности",
+                    parent=persona_test,
+                    type=personality_apprecation_test_type,
+                )
+                values_test = QuizFactory.build(
+                    name="TEST Тест на ценности", parent=persona_test, type=personality_values_test_type
+                )
 
                 character_topic_openness = QuestionTopicFactory.build(name="TEST Открытость")
                 character_topic_consciousness = QuestionTopicFactory.build(name="TEST Сознательность")
@@ -42,7 +60,7 @@ class CreateInitialDB(Command):
 
                 values_topic_love = QuestionTopicFactory.build(name="TEST Любовь")
                 values_topic_service = QuestionTopicFactory.build(name="TEST Услуги")
-                values_topic_status  = QuestionTopicFactory.build(name="TEST Статус")
+                values_topic_status = QuestionTopicFactory.build(name="TEST Статус")
                 values_topic_money = QuestionTopicFactory.build(name="TEST Деньги")
                 values_topic_things = QuestionTopicFactory.build(name="TEST Вещи")
                 values_topic_information = QuestionTopicFactory.build(name="TEST Информация")
@@ -108,38 +126,57 @@ class CreateInitialDB(Command):
                 ]
 
                 for character_questions_text, character_questions_topic in character_questions_texts_topics:
-                    objects.append(QuestionFactory.build(
-                        text=f"TEST {character_questions_text}", 
-                        quiz=character_test, 
-                        type=character_question_type, 
-                        topic=character_questions_topic,
-                    ))
+                    objects.append(
+                        QuestionFactory.build(
+                            text=f"TEST {character_questions_text}",
+                            quiz=character_test,
+                            type=character_question_type,
+                            topic=character_questions_topic,
+                        )
+                    )
 
                 apprecation_question_texts_topics = [
                     ["Мне нравится получать записки со словами поддержки", apprecation_topic_words],
                     ["Мне важно слышать комплименты", apprecation_topic_words],
                     ["Я люблю оставлять записочки друзьям или возлюбленным", apprecation_topic_words],
                     ["Мне нравится, когда мне дарят подарки", apprecation_topic_gifts],
-                    ["Мне очень приятно, когда кто-то помнит о важных для меня датах и делает подарок", apprecation_topic_gifts],
+                    [
+                        "Мне очень приятно, когда кто-то помнит о важных для меня датах и делает подарок",
+                        apprecation_topic_gifts,
+                    ],
                     ["Я люблю привозить друзьям сувениры из путешествий", apprecation_topic_gifts],
                     ["Я ощущаю заботу, когда друг мне помогает", apprecation_topic_help],
-                    ["Я ощущаю признательность, когда коллега предлагает помощь с проектом или отдельным заданием", apprecation_topic_help],
-                    ["Я предпочту приготовить десерт другу или возлюбленному (одному или вместе), чем купить готовый", apprecation_topic_help],
+                    [
+                        "Я ощущаю признательность, когда коллега предлагает помощь с проектом или отдельным заданием",
+                        apprecation_topic_help,
+                    ],
+                    [
+                        "Я предпочту приготовить десерт другу или возлюбленному (одному или вместе), чем купить готовый",
+                        apprecation_topic_help,
+                    ],
                     ["Мне нравится, когда меня обнимают", apprecation_topic_touch],
-                    ["Я чувствую, что меня ценят, когда человек, который мне дорог, обнимает меня", apprecation_topic_touch],
+                    [
+                        "Я чувствую, что меня ценят, когда человек, который мне дорог, обнимает меня",
+                        apprecation_topic_touch,
+                    ],
                     ["Мне удобно дотрагиваться до руки собеседника во время беседы", apprecation_topic_touch],
                     ["Мне нравится встречаться с друзьями небольшими компаниями", apprecation_topic_time],
                     ["Я ощущаю близость, когда делаю что-то вместе с кем-то", apprecation_topic_time],
-                    ["Я люблю навещать друзей если проезжаю мимо хотя бы на 5 минут, нередко связываться хотя бы на короткое время", apprecation_topic_time],
+                    [
+                        "Я люблю навещать друзей если проезжаю мимо хотя бы на 5 минут, нередко связываться хотя бы на короткое время",
+                        apprecation_topic_time,
+                    ],
                 ]
 
                 for apprecation_question_text, apprecation_question_topic in apprecation_question_texts_topics:
-                    objects.append(QuestionFactory.build(
-                        text=f"TEST {apprecation_question_text}", 
-                        quiz=apprecation_test, 
-                        type=apprecation_question_type, 
-                        topic=apprecation_question_topic,
-                    ))
+                    objects.append(
+                        QuestionFactory.build(
+                            text=f"TEST {apprecation_question_text}",
+                            quiz=apprecation_test,
+                            type=apprecation_question_type,
+                            topic=apprecation_question_topic,
+                        )
+                    )
 
                 values_question_texts_topics = [
                     ["Мне важно чувствовать одобрение", values_topic_love],
@@ -156,19 +193,24 @@ class CreateInitialDB(Command):
                     ["Я уверен, что деньги необходимы, чтобы быть абсолютно счастливым", values_topic_money],
                     ["Мне нравится собирать какие-то вещи", values_topic_things],
                     ["Я часто покупаю подарки, делаю презенты", values_topic_things],
-                    ["Я могу вспомнить много вещей дома, которые имеют особое эмоциональное значение", values_topic_things],
+                    [
+                        "Я могу вспомнить много вещей дома, которые имеют особое эмоциональное значение",
+                        values_topic_things,
+                    ],
                     ["Мне нравится быть в курсе происходящего", values_topic_information],
                     ["Мне нравится давать советы", values_topic_information],
                     ["Мне нравится учить и учиться", values_topic_information],
                 ]
 
                 for values_question_text, values_question_topic in values_question_texts_topics:
-                    objects.append(QuestionFactory.build(
-                        text=f"TEST {values_question_text}", 
-                        quiz=values_test, 
-                        type=values_question_type, 
-                        topic=values_question_topic,
-                    ))
+                    objects.append(
+                        QuestionFactory.build(
+                            text=f"TEST {values_question_text}",
+                            quiz=values_test,
+                            type=values_question_type,
+                            topic=values_question_topic,
+                        )
+                    )
 
                 user = UserFactory.build(tg_user_id=-1)
                 objects.append(user)

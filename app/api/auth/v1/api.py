@@ -2,13 +2,11 @@ from fastapi import APIRouter, Depends
 
 from core.jwt_auth import create_access_token
 from core.tg_auth import get_or_create_user_from_tg
-from schemas.user import UserIdOut
 from schemas.token import Token
+from schemas.user import UserIdOut
 
-router = APIRouter(
-    tags=["Аутентификация"],
-    prefix="/auth"
-)
+router = APIRouter(tags=["Аутентификация"], prefix="/auth")
+
 
 @router.post(
     path="/token_from_tg",

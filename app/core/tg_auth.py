@@ -1,13 +1,8 @@
 import http
 
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi.security.http import HTTPAuthorizationCredentials
-from fastapi.security.http import HTTPBearer
-
-from telegram_webapp_auth.auth import TelegramAuthenticator
-from telegram_webapp_auth.auth import TelegramUser
-from telegram_webapp_auth.auth import generate_secret_key
+from fastapi import Depends, HTTPException
+from fastapi.security.http import HTTPAuthorizationCredentials, HTTPBearer
+from telegram_webapp_auth.auth import TelegramAuthenticator, TelegramUser, generate_secret_key
 from telegram_webapp_auth.errors import InvalidInitDataError
 
 from core.config import settings
@@ -15,6 +10,7 @@ from schemas.user import UserIdOut
 from services.get_or_create_user_from_tg import get_or_create_user_from_tg_s
 
 telegram_authentication_schema = HTTPBearer()
+
 
 async def get_telegram_authenticator() -> TelegramAuthenticator:
     secret_key = generate_secret_key(settings.TELEGRAM_BOT_TOKEN.get_secret_value())
@@ -39,6 +35,7 @@ async def get_tg_user(
         )
 
     return user
+
 
 async def get_or_create_user_from_tg(tg_user: TelegramUser = Depends(get_tg_user)) -> UserIdOut:
     return await get_or_create_user_from_tg_s(tg_user=tg_user, out_model=UserIdOut)

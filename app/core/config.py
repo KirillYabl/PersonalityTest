@@ -1,8 +1,9 @@
 from functools import lru_cache
 
-from pydantic import field_validator, SecretStr
+from pydantic import SecretStr, field_validator
 from pydantic_core.core_schema import ValidationInfo
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class SettingsSchema(BaseSettings):
     model_config = SettingsConfigDict(
@@ -34,7 +35,7 @@ class SettingsSchema(BaseSettings):
         if value is None:
             return SecretStr(f"postgresql+asyncpg://{postgres_user}:{postgres_password}@db/{postgres_db}")
         return SecretStr(value)
-    
+
     @field_validator("SQLALCHEMY_DATABASE_URL_FOR_ALEMBIC", mode="after")
     def build_database_url_for_alembic(cls, value: SecretStr | None, values: ValidationInfo) -> SecretStr:
         postgres_user = values.data.get("POSTGRES_USER").get_secret_value()
@@ -43,6 +44,7 @@ class SettingsSchema(BaseSettings):
         if value is None:
             return SecretStr(f"postgresql://{postgres_user}:{postgres_password}@db/{postgres_db}")
         return SecretStr(value)
+
 
 @lru_cache
 def get_config() -> SettingsSchema:

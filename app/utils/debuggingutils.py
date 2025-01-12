@@ -1,13 +1,13 @@
 from collections.abc import Callable
 from functools import wraps
-from contextvars import ContextVar
 from typing import Any
 
 from loguru import logger
 from sqlalchemy import event
 
-from db.database import get_db_session
 from core.contextvars import query_count_context
+from db.database import get_db_session
+
 
 def count_queries(func) -> Callable:
     @wraps(func)

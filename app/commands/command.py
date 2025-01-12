@@ -1,13 +1,14 @@
 from abc import ABC, abstractmethod
 
-import uvloop
 import click
+import uvloop
 from loguru import logger
+
 
 class Command(ABC):
     """
     Класс команды, умеет делать прямой прогон, обратный (если это воозможно) и содержит интерфейс запуска через командную строку.
-    
+
     Для запуска через командную строку нужно использовать -m флаг в python, например
 
     ```
@@ -18,6 +19,7 @@ class Command(ABC):
     uv run -m commands.my_command
     ```
     """
+
     def __init__(self, *args, **kwargs) -> None:
         """
         Если в команду нужно передать параметры, то они передаются при инициализации.

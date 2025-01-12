@@ -4,17 +4,18 @@ from uuid import UUID
 
 from core.errors import QuizNotFoundByIdException, UserNotFoundByTgIdException
 from core.errors_base import ServiceExceptionGroup
-from db.repositories.base import SQLAlchemyRepository
 from db.repositories import QuizAttemptRepository, QuizRepository, UserRepository
+from db.repositories.base import SQLAlchemyRepository
 from schemas.quiz import QuizIdOut
 from schemas.quiz_attempt import QuizAttemptIdOut, QuizAttemptIn
 from schemas.sqlalchemy import SQLAlchemyOutModel
 from selects.user import GetUserByIdP, get_user_by_id
 
+
 async def _create_quiz_attempt(
-    quiz_id: UUID, 
-    user_id: UUID, 
-    out_model: SQLAlchemyOutModel, 
+    quiz_id: UUID,
+    user_id: UUID,
+    out_model: SQLAlchemyOutModel,
     quiz_attempt_repository: SQLAlchemyRepository,
 ) -> SQLAlchemyOutModel:
     in_data = QuizAttemptIn(
@@ -23,14 +24,15 @@ async def _create_quiz_attempt(
     )
     return await quiz_attempt_repository.create(in_data=in_data, out_data=out_model)
 
+
 class _CreateQuizAttemptP(Protocol):
     async def __call__(
         quiz_id: UUID,
         user_id: UUID,
         out_model: SQLAlchemyOutModel,
         quiz_attempt_repository: SQLAlchemyRepository,
-    ) -> SQLAlchemyOutModel:
-        ...
+    ) -> SQLAlchemyOutModel: ...
+
 
 @dataclass(frozen=True, kw_only=True, slots=True)
 class CreateQuizAttemptService:
@@ -48,8 +50,10 @@ class CreateQuizAttemptService:
 
         user = await self._get_user_by_id(user_id=user_id, user_repository=self._user_repository)
         if user is None:
-            _exceptions_group.add_error(UserNotFoundByTgIdException(details=f"Пользователь с user_id={str(user_id)} не найден."))
-        
+            _exceptions_group.add_error(
+                UserNotFoundByTgIdException(details=f"Пользователь с user_id={str(user_id)} не найден.")
+            )
+
         quiz = await self._quiz_repository.get_by_id(id=quiz_id, out_data=QuizIdOut)
         if quiz is None:
             _exceptions_group.add_error(QuizNotFoundByIdException(details=f"Тест с quiz_id={str(quiz_id)} не найден."))
@@ -57,10 +61,11 @@ class CreateQuizAttemptService:
         _exceptions_group.raise_if_not_empty()
 
         return await self._create_quiz_attempt(
-            quiz_id=quiz_id, 
+            quiz_id=quiz_id,
             user_id=user.uuid,
-            out_model=self.out_model, 
+            out_model=self.out_model,
             quiz_attempt_repository=self._quiz_attempt_repository,
         )
-    
+
+
 create_quiz_attempt_s: CreateQuizAttemptService = CreateQuizAttemptService()

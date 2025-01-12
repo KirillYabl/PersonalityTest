@@ -1,5 +1,6 @@
-from db.tables import QuizAttempt
 from db.repositories.base import SQLAlchemyRepository
+from db.tables import QuizAttempt
+
 
 class QuizAttemptRepository(SQLAlchemyRepository):
     model = QuizAttempt

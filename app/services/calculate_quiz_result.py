@@ -3,37 +3,38 @@ from dataclasses import dataclass
 from typing import Protocol
 from uuid import UUID
 
+from loguru import logger
+
 from core.errors import NotAllQuizTypesCalculatedError, QuizResultNotFoundException
 from core.errors_base import ServiceExceptionGroup
 from core.types import JSON
+from db.repositories import QuestionAnswerRepository, QuestionRepository, QuizRepository
+from db.repositories.base import SQLAlchemyRepository
 from db.repositories.quiz_result import QuizResultRepository
 from db.tables import QuestionAnswer, Quiz
 from resources.schema_constants import QuizTypeName, ResultStatus
 from schemas.question import QuestionOut
-from db.repositories import QuestionAnswerRepository, QuestionRepository, QuizRepository
-from db.repositories.base import SQLAlchemyRepository
 from schemas.question_answer import QuestionAnswerQuestionIdValueOut
 from schemas.quiz import QuizOut
 from schemas.quiz_result import QuizResultUpdateDataIn, QuizResultWithAttemptAndQuizIdsOut
 from schemas.sqlalchemy import SQLAlchemyOutModel
-from loguru import logger
-
 from selects.question import GetActiveQuestionsByQuizIdsP, get_active_questions_by_quiz_ids
 from selects.quiz import GetAllChildrenQuizesP, get_all_children_quizes
-    
+
 
 async def _get_quiz_result_by_uuid(
-    result_uuid: UUID, 
+    result_uuid: UUID,
     quiz_result_repository: SQLAlchemyRepository,
 ) -> QuizResultWithAttemptAndQuizIdsOut | None:
     return await quiz_result_repository.get_by_id(id=result_uuid, out_data=QuizResultWithAttemptAndQuizIdsOut)
 
+
 class _GetQuizResultByUuidP(Protocol):
     async def __call__(
-        result_uuid: UUID, 
+        result_uuid: UUID,
         quiz_result_repository: SQLAlchemyRepository,
-    ) -> QuizResultWithAttemptAndQuizIdsOut | None:
-        ...
+    ) -> QuizResultWithAttemptAndQuizIdsOut | None: ...
+
 
 async def _calculate_quizes_results(
     quiz: QuizOut,
@@ -48,18 +49,22 @@ async def _calculate_quizes_results(
     :param quiz_result: объекта записи результата теста
     :param question_answer_repository: репозиторий ответа на вопрос
     :return: результат теста
-    """    
+    """
     quiz_type_questions = [question for question in quiz_questions if question.quiz_name == quiz.name]
     filters = (
         QuestionAnswer.attempt_id == quiz_result.attempt_id,
         QuestionAnswer.question_id.in_([question.uuid for question in quiz_type_questions]),
     )
-    quiz_type_question_answers = await question_answer_repository.get_many(*filters, out_data=QuestionAnswerQuestionIdValueOut)
-    quiz_type_question_answers_mapping = {answer.question_id: answer.answer_value for answer in quiz_type_question_answers}
+    quiz_type_question_answers = await question_answer_repository.get_many(
+        *filters, out_data=QuestionAnswerQuestionIdValueOut
+    )
+    quiz_type_question_answers_mapping = {
+        answer.question_id: answer.answer_value for answer in quiz_type_question_answers
+    }
     match quiz.type_name:
 
         case QuizTypeName.PERSONALITY_CHARACTER:
-            # принцип расчета, вычислить нормированный на 1 балл 
+            # принцип расчета, вычислить нормированный на 1 балл
             # по каждой категории (топику), как сумма всех на сумму максимальных баллов
             temp_result = defaultdict(lambda: defaultdict(int))
             for question in quiz_type_questions:
@@ -81,7 +86,9 @@ async def _calculate_quizes_results(
                     answer = question.default
                 temp_result[question.topic_name] += int(answer)
             pick_first_n_appreciations = 2
-            result = sorted(temp_result, key=lambda question_type: temp_result[question_type], reverse=True)[:pick_first_n_appreciations]
+            result = sorted(temp_result, key=lambda question_type: temp_result[question_type], reverse=True)[
+                :pick_first_n_appreciations
+            ]
 
         case QuizTypeName.PERSONALITY_VALUES:
             # принцип расчета, по каждой категории вычислить баллы и найти 2 категории с максимальным числом баллов
@@ -92,12 +99,15 @@ async def _calculate_quizes_results(
                     answer = question.default
                 temp_result[question.topic_name] += answer
             pick_first_n_appreciations = 2
-            result = sorted(temp_result, key=lambda question_type: temp_result[question_type], reverse=True)[:pick_first_n_appreciations]
+            result = sorted(temp_result, key=lambda question_type: temp_result[question_type], reverse=True)[
+                :pick_first_n_appreciations
+            ]
 
         case _:
             result = None
-            
+
     return result
+
 
 class _CalculateQuizesResultsP:
     async def __call__(
@@ -105,11 +115,11 @@ class _CalculateQuizesResultsP:
         quiz_questions: list[QuestionOut],
         quiz_result: QuizResultWithAttemptAndQuizIdsOut,
         question_answer_repository: SQLAlchemyRepository,
-    ) -> JSON:
-        ...
+    ) -> JSON: ...
+
 
 async def _record_quiz_result(
-    quiz_result: QuizResultWithAttemptAndQuizIdsOut, 
+    quiz_result: QuizResultWithAttemptAndQuizIdsOut,
     data: dict[JSON],
     quiz_result_repository: SQLAlchemyRepository,
 ) -> None:
@@ -118,20 +128,20 @@ async def _record_quiz_result(
     :param quiz_result: результат теста
     :param data: данные для записи
     :param quiz_result_repository: репозиторий результата теста
-    """    
+    """
     in_data = QuizResultUpdateDataIn(
         data=data,
     )
     await quiz_result_repository.update_one(id=quiz_result.uuid, in_data=in_data, out_data=None)
 
+
 class _RecordQuizResultP:
     async def __call__(
-        quiz_result: QuizResultWithAttemptAndQuizIdsOut, 
+        quiz_result: QuizResultWithAttemptAndQuizIdsOut,
         data: dict[JSON],
         quiz_result_repository: SQLAlchemyRepository,
-    ) -> None:
-        ...
-    
+    ) -> None: ...
+
 
 @dataclass(frozen=True, kw_only=True, slots=True)
 class CalculateQuizResultService:
@@ -160,31 +170,31 @@ class CalculateQuizResultService:
             quiz_result_repository=self._quiz_result_repository,
         )
         if quiz_result is None:
-            _exceptions_group.add_error(QuizResultNotFoundException(details=f"Результат теста по {result_uuid=} не найден"))
+            _exceptions_group.add_error(
+                QuizResultNotFoundException(details=f"Результат теста по {result_uuid=} не найден")
+            )
             _exceptions_group.raise_if_not_empty()
         logger.info(f"Результат теста: {quiz_result}")
 
         await self._record_quiz_result(
-            quiz_result=quiz_result, 
+            quiz_result=quiz_result,
             data={"status": ResultStatus.IN_PROCESS},
             quiz_result_repository=self._quiz_result_repository,
         )
-        
+
         quiz_id = quiz_result.quiz_id
         logger.debug(f"Получаю дочерние тесты для {quiz_id=}")
         children_quizes = await self._get_all_children_quizes(
-            quiz_id=quiz_id, 
+            quiz_id=quiz_id,
             quiz_repository=self._quiz_repository,
         )
         quiz_ids = set([quiz_id]) | {quiz.uuid for quiz in children_quizes}
-        filters = (
-            Quiz.uuid.in_(quiz_ids),
-        )
+        filters = (Quiz.uuid.in_(quiz_ids),)
         logger.debug(f"Тест и его дочерние {quiz_ids=}")
 
         quizes = await self._quiz_repository.get_many(*filters, out_data=QuizOut)
         quizes_questions = await self._get_active_questions_by_quiz_ids(
-            quiz_ids=quiz_ids, 
+            quiz_ids=quiz_ids,
             question_repository=self._question_repository,
             out_model=QuestionOut,
         )
@@ -214,12 +224,11 @@ class CalculateQuizResultService:
         _exceptions_group.raise_if_not_empty()
         calculated_quiz_results["status"] = ResultStatus.DONE
         await self._record_quiz_result(
-            quiz_result=quiz_result, 
+            quiz_result=quiz_result,
             data=calculated_quiz_results,
             quiz_result_repository=self._quiz_result_repository,
         )
         logger.info(f"Расчет результата {result_uuid=} завершен")
 
-            
-    
+
 calculate_quiz_result_s: CalculateQuizResultService = CalculateQuizResultService()

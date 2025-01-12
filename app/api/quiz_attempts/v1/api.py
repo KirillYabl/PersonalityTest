@@ -1,21 +1,19 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Path, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, Depends, Path
 from loguru import logger
 
 from api.quiz_attempts.v1.schema import CreateQuizAttemptIn
 from core.jwt_auth import get_current_user
 from schemas.sqlalchemy import SQLAlchemyOutModel
 from schemas.user import UserIdOut
-from services.create_quiz_attempt import create_quiz_attempt_s
-from services.complete_quiz_current_attempt import complete_quiz_current_attempt_s
 from services.calculate_quiz_result import calculate_quiz_result_s
+from services.complete_quiz_current_attempt import complete_quiz_current_attempt_s
+from services.create_quiz_attempt import create_quiz_attempt_s
 
-router = APIRouter(
-    tags=["Попытки прохождения тестов"],
-    prefix="/quiz_attempts"
-)
+router = APIRouter(tags=["Попытки прохождения тестов"], prefix="/quiz_attempts")
+
 
 @router.post(
     path="",
@@ -29,6 +27,7 @@ async def create_quiz_attempt(
     result = await create_quiz_attempt_s(quiz_id=data.quiz_uuid, user_id=user.uuid)
     logger.trace(f"Результаты: {result}")
     return result
+
 
 @router.post(
     path="/complete/{quiz_uuid}",

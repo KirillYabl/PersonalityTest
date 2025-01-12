@@ -22,6 +22,5 @@ async function initializeApp() {
     console.error("Ошибка при инициализации:", error.message);
   }
 }
-  
+
 initializeApp();
-  

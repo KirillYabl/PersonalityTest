@@ -20,3 +20,41 @@ dependencies = [
     "telegram-webapp-auth>=2.0.1",
     "uvloop>=0.21.0",
 ]
+
+[dependency-groups]
+dev = [
+    "black>=24.10.0",
+    "isort>=5.13.2",
+    "pycln>=2.5.0",
+    "ruff>=0.9.1",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+per-file-ignores = { "__init__.py" = ["F401"] }
+
+[tool.black]
+line-length = 120
+target-version = ['py311']
+exclude = '''
+/(
+  \.eggs
+  |\.git
+  |\.hg
+  |\.mypy_cache
+  |\.nox
+  |\.tox
+  |\.venv
+  |\.pyc
+  |\.pyi
+)/
+'''
+
+[tool.isort]
+profile = "black"
+py_version = 311
+line_length = 120
+skip = [
+    "__pycache__",
+]

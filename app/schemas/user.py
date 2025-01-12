@@ -1,11 +1,13 @@
 from typing import ClassVar
 from uuid import UUID
+
 from pydantic import Field
 from sqlalchemy.orm import Relationship
 
 from db.tables import User
-from schemas.sqlalchemy import SQLAlchemyInModel, SQLAlchemyOutModel
 from resources.schema_constants import ServiceFields
+from schemas.sqlalchemy import SQLAlchemyInModel, SQLAlchemyOutModel
+
 
 class UserIdOut(SQLAlchemyOutModel):
     relationships: ClassVar[tuple[tuple[Relationship]]] = tuple()
@@ -17,7 +19,8 @@ class UserIdOut(SQLAlchemyOutModel):
         return cls(
             uuid=model_obj.uuid,
         )
-    
+
+
 class CreateUserTgInData(SQLAlchemyInModel):
     tg_user_id: int
     tg_username: str

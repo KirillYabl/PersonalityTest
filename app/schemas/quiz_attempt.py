@@ -1,12 +1,14 @@
 from datetime import datetime
 from typing import ClassVar
 from uuid import UUID
+
 from pydantic import Field
 from sqlalchemy.orm import Relationship
 
 from db.tables import QuizAttempt
-from schemas.sqlalchemy import SQLAlchemyInModel, SQLAlchemyOutModel
 from resources.schema_constants import ServiceFields
+from schemas.sqlalchemy import SQLAlchemyInModel, SQLAlchemyOutModel
+
 
 class QuizAttemptIdOut(SQLAlchemyOutModel):
     relationships: ClassVar[tuple[tuple[Relationship]]] = tuple()
@@ -18,7 +20,8 @@ class QuizAttemptIdOut(SQLAlchemyOutModel):
         return cls(
             uuid=model_obj.uuid,
         )
-    
+
+
 class QuizAttemptIdDatesOut(SQLAlchemyOutModel):
     relationships: ClassVar[tuple[tuple[Relationship]]] = tuple()
 
@@ -33,7 +36,8 @@ class QuizAttemptIdDatesOut(SQLAlchemyOutModel):
             created_at=model_obj.created_at,
             updated_at=model_obj.updated_at,
         )
-    
+
+
 class QuizAttemptIn(SQLAlchemyInModel):
     quiz_id: UUID
     user_id: UUID

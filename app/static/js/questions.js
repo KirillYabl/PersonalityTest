@@ -33,7 +33,7 @@ async function sendAnswerToServer(questionUUID, answer) {
     question_uuid: questionUUID,
     value: answer
   }];
-  
+
   try {
     const response = await fetch(answersUrl, {
       method: "PUT",
@@ -214,7 +214,7 @@ function fillRandomAnswers() {
 
   questions.forEach(question => {
     let randomAnswer;
-    
+
     if (question.answer_type === "integer" && question.min_value !== null && question.max_value !== null) {
       randomAnswer = Math.floor(Math.random() * (question.max_value - question.min_value + 1)) + question.min_value;
     } else if (question.answer_type === "boolean") {

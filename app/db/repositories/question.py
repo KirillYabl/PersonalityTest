@@ -1,5 +1,6 @@
-from db.tables import Question
 from db.repositories.base import SQLAlchemyRepository
+from db.tables import Question
+
 
 class QuestionRepository(SQLAlchemyRepository):
     model = Question

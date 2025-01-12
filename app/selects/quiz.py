@@ -12,7 +12,7 @@ async def get_all_children_quizes(quiz_id: UUID, quiz_repository: SQLAlchemyRepo
     Работает только с активными тестами. Все неактивные тесты и их дети не будут включены.
     Если входящий тест сам не активный, то ун его не будет детей.
 
-    Т.к. иерархия тестов использует наивное дерево, то рекурсия реализована внутри 
+    Т.к. иерархия тестов использует наивное дерево, то рекурсия реализована внутри
     алгоритма для избегания лищних запросов или использования рекурсивного запроса в БД.
 
     TODO: кэширование
@@ -37,9 +37,9 @@ async def get_all_children_quizes(quiz_id: UUID, quiz_repository: SQLAlchemyRepo
     for quiz_uuid, quiz_parents in quiz_parents_mapping.items():
         if quiz_id in quiz_parents:
             quiz_children.add(quiz_uuid)
-        
+
     return [QuizIdOut(uuid=quiz_uuid) for quiz_uuid in quiz_children]
 
+
 class GetAllChildrenQuizesP(Protocol):
-    async def __call__(quiz_id: UUID, quiz_repository: SQLAlchemyRepository) -> list[QuizIdOut]:
-        ...
+    async def __call__(quiz_id: UUID, quiz_repository: SQLAlchemyRepository) -> list[QuizIdOut]: ...

@@ -1,5 +1,6 @@
-from db.tables import User
 from db.repositories.base import SQLAlchemyRepository
+from db.tables import User
+
 
 class UserRepository(SQLAlchemyRepository):
     model = User
