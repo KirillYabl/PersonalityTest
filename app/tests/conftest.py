@@ -1,7 +1,20 @@
+import asyncio
+
+import pytest
 import pytest_asyncio
 
 from db.database import async_engine
 from db.tables.base import BaseModel
+
+
+@pytest.fixture(scope="session")
+def event_loop():
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+    yield loop
+    loop.close()
 
 
 @pytest_asyncio.fixture(scope="session", autouse=True, loop_scope="session")
