@@ -36,6 +36,16 @@ function execute_api {
     dc run --rm app uv run -m $@
 }
 
+function add_lib {
+    echo "Add library"
+    dc run --rm app uv add $@
+}
+
+function remove_lib {
+    echo "Remove library"
+    dc run --rm app uv remove $@
+}
+
 case "$1" in
     "up-api"       ) up_api       "${@:2}"  ;;
     "tests"        ) test_api     "${@:2}"  ;;
@@ -43,5 +53,7 @@ case "$1" in
     "migrate"      ) migrate                ;;
     "back-migrate" ) back_migrate           ;;
     "exec-api"     ) execute_api  "${@:2}"  ;;
+    "add-lib"      ) add_lib      "${@:2}"  ;;
+    "remove-lib"   ) remove_lib   "${@:2}"  ;;
     *              ) dc           "$@"      ;;
 esac

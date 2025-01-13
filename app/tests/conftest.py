@@ -1,4 +1,6 @@
 import asyncio
+from collections.abc import Generator
+from typing import Any
 
 import pytest
 import pytest_asyncio
@@ -8,7 +10,7 @@ from db.tables.base import BaseModel
 
 
 @pytest.fixture(scope="session")
-def event_loop():
+def event_loop() -> Generator[asyncio.AbstractEventLoop, Any, None]:
     try:
         loop = asyncio.get_running_loop()
     except RuntimeError:

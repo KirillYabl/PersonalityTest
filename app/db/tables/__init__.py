@@ -1,3 +1,5 @@
+"""Тестовые таблицы сюда импортировать не нужно."""
+
 from .question import Question
 from .question_answer import QuestionAnswer
 from .question_topic import QuestionTopic
