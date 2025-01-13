@@ -102,7 +102,7 @@ class SQLAlchemyRepository(BaseRepository):
                         in_datas,
                     )
                     objects_ids = scalars.all()
-            filters = getattr(self.model, self.primary_key_name).in_(objects_ids)
+            filters = (getattr(self.model, self.primary_key_name).in_(objects_ids),)
             return await self.get_many(*filters, out_data=out_data)
 
     async def update_one(

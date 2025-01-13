@@ -56,12 +56,14 @@ class BrandOut(SQLAlchemyOutModel):
 class CarBrandOut(SQLAlchemyOutModel):
     relationships: ClassVar[tuple[tuple[Relationship]]] = ((TestCar.brand,),)
 
+    uuid: UUID = Field(..., json_schema_extra={ServiceFields.SORTING_FIELD: TestCar.uuid})
     name: str = Field(..., json_schema_extra={ServiceFields.SORTING_FIELD: TestCar.name})
     brand_name: str = Field(..., json_schema_extra={ServiceFields.SORTING_FIELD: TestBrand.name})
 
     @classmethod
     def from_orm(cls, model_obj: TestCar) -> "CarBrandOut":
         return cls(
+            uuid=model_obj.uuid,
             name=model_obj.name,
             brand_name=model_obj.brand.name,
         )

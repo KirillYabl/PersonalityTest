@@ -14,7 +14,7 @@ async def test_create_row() -> None:
     async with get_db_session() as session:
         result = await session.execute(count_query)
         count_before = result.scalar()
-    obj = await TestBrandRepository().create(in_data=BrandIn(name="test"), out_data=BrandOut)
+    obj = await TestBrandRepository().create(in_data=BrandIn(name=TestBrandFactory.build().name), out_data=BrandOut)
     assert isinstance(obj, BrandOut)
     async with get_db_session() as session:
         result = await session.execute(count_query)
@@ -127,3 +127,64 @@ async def test_get_many_offset_limit() -> None:
     )
     assert len(rows) == limit
     assert rows[0].uuid == ids[offset]
+
+
+@pytest.mark.asyncio(loop_scope="session")
+async def test_delete_by_ids() -> None:
+    count = 2
+    ids = []
+    for _ in range(count):
+        frow = await TestBrandFactory.acreate()
+        ids.append(frow.uuid)
+    await TestBrandRepository().delete_by_ids(ids=ids)
+    rows = await TestBrandRepository().get_many(TestBrand.uuid.in_(ids), out_data=BrandOut)
+    assert len(rows) == 0
+    await TestBrandRepository().delete_by_ids(ids=ids)
+
+
+@pytest.mark.asyncio(loop_scope="session")
+async def test_update_one() -> None:
+    frow = await TestBrandFactory.acreate()
+    new_name = TestBrandFactory.build().name
+    row = await TestBrandRepository().update_one(id=frow.uuid, in_data=BrandIn(name=new_name), out_data=BrandOut)
+    assert row is not None
+    assert row.name == new_name
+    await TestBrandRepository().delete_by_ids(ids=[row.uuid])
+
+
+@pytest.mark.asyncio(loop_scope="session")
+async def test_create_many() -> None:
+    count = 2
+    names = [TestBrandFactory.build().name for _ in range(count)]
+    objs = await TestBrandRepository().create_many(in_datas=[{"name": name} for name in names], out_data=BrandOut)
+    assert len(objs) == count
+    assert all(isinstance(obj, BrandOut) for obj in objs)
+    assert all(obj.name in names for obj in objs)
+    await TestBrandRepository().delete_by_ids(ids=[obj.uuid for obj in objs])
+
+
+@pytest.mark.asyncio(loop_scope="session")
+async def test_create_many_without_return() -> None:
+    count = 2
+    names = [TestBrandFactory.build().name for _ in range(count)]
+    await TestBrandRepository().create_many(in_datas=[{"name": name} for name in names], out_data=None)
+    rows = await TestBrandRepository().get_many(TestBrand.name.in_(names), out_data=BrandOut)
+    assert len(rows) == count
+    await TestBrandRepository().delete_by_ids(ids=[obj.uuid for obj in rows])
+
+
+@pytest.mark.asyncio(loop_scope="session")
+async def test_create_many_with_relationships() -> None:
+    count = 2
+    names = ["test1", "test2"]
+    brand_objs = await TestBrandRepository().create_many(in_datas=[{"name": name} for name in names], out_data=BrandOut)
+    car_objs = await TestCarRepository().create_many(
+        in_datas=[{"name": name, "brand_uuid": brand_objs[i].uuid} for i, name in enumerate(names)],
+        out_data=CarBrandOut,
+    )
+    assert len(car_objs) == count
+    assert all(isinstance(obj, CarBrandOut) for obj in car_objs)
+    assert set(names) == {obj.name for obj in car_objs}
+    assert set([obj.brand_name for obj in car_objs]) == set(names)
+    await TestCarRepository().delete_by_ids(ids=[obj.uuid for obj in car_objs])
+    await TestBrandRepository().delete_by_ids(ids=[obj.uuid for obj in brand_objs])
