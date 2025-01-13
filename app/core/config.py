@@ -4,6 +4,8 @@ from pydantic import SecretStr, field_validator
 from pydantic_core.core_schema import ValidationInfo
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from resources.schema_constants import Stand
+
 
 class SettingsSchema(BaseSettings):
     model_config = SettingsConfigDict(
@@ -11,9 +13,12 @@ class SettingsSchema(BaseSettings):
         extra="ignore",
     )
 
+    STAND: str
+
     POSTGRES_USER: SecretStr
     POSTGRES_PASSWORD: SecretStr
     POSTGRES_DB: SecretStr
+    DB_LABEL: str
 
     TELEGRAM_BOT_TOKEN: SecretStr
     WEBAPP_URL: str
@@ -32,8 +37,9 @@ class SettingsSchema(BaseSettings):
         postgres_user = values.data.get("POSTGRES_USER").get_secret_value()
         postgres_password = values.data.get("POSTGRES_PASSWORD").get_secret_value()
         postgres_db = values.data.get("POSTGRES_DB").get_secret_value()
+        db_label = values.data.get("DB_LABEL")
         if value is None:
-            return SecretStr(f"postgresql+asyncpg://{postgres_user}:{postgres_password}@db/{postgres_db}")
+            return SecretStr(f"postgresql+asyncpg://{postgres_user}:{postgres_password}@{db_label}/{postgres_db}")
         return SecretStr(value)
 
     @field_validator("SQLALCHEMY_DATABASE_URL_FOR_ALEMBIC", mode="after")
@@ -41,9 +47,16 @@ class SettingsSchema(BaseSettings):
         postgres_user = values.data.get("POSTGRES_USER").get_secret_value()
         postgres_password = values.data.get("POSTGRES_PASSWORD").get_secret_value()
         postgres_db = values.data.get("POSTGRES_DB").get_secret_value()
+        db_label = values.data.get("DB_LABEL")
         if value is None:
-            return SecretStr(f"postgresql://{postgres_user}:{postgres_password}@db/{postgres_db}")
+            return SecretStr(f"postgresql://{postgres_user}:{postgres_password}@{db_label}/{postgres_db}")
         return SecretStr(value)
+
+    @field_validator("STAND", mode="before")
+    def validate_stand(cls, value: str) -> str:
+        if value not in Stand.values():
+            raise ValueError(f"STAND must be one of {', '.join(Stand.values())}")
+        return value
 
 
 @lru_cache

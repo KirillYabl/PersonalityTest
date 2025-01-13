@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -e
+
+function dc {
+    echo "Running docker compose with args: $@"
+    docker compose "$@"
+}
+
+function up_api {
+    echo "Run api"
+    dc up app "$@"
+}
+
+function test_api {
+    echo "Run tests"
+    dc run --rm test-app pytest "$@"
+}
+
+function migrations {
+    echo "Create migration"
+    dc run --rm app uv run alembic revision --autogenerate -m "$@"
+}
+
+function migrate {
+    echo "Apply migrations"
+    dc run --rm app uv run alembic upgrade head
+}
+
+function back_migrate {
+    echo "Rollback migration"
+    dc run --rm app uv run alembic downgrade -1
+}
+
+function execute_api {
+    echo "Execute command"
+    dc run --rm app uv run -m $@
+}
+
+case "$1" in
+    "up-api"       ) up_api       "${@:2}"  ;;
+    "tests"        ) test_api     "${@:2}"  ;;
+    "migrations"   ) migrations   "${@:2}"  ;;
+    "migrate"      ) migrate                ;;
+    "back-migrate" ) back_migrate           ;;
+    "exec-api"     ) execute_api  "${@:2}"  ;;
+    *              ) dc           "$@"      ;;
+esac

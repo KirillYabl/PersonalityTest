@@ -17,6 +17,11 @@ class ResultStatus:
 
 
 class QuizTypeName:
-    PERSONALITY_CHARACTER = "PersonalityCharacterTest"
-    PERSONALITY_APPRECATION = "PersonalityApprecationTest"
-    PERSONALITY_VALUES = "PersonalityValuesTest"
+    PERSONALITY_CHARACTER = "TEST PersonalityCharacterTest"
+    PERSONALITY_APPRECATION = "TEST PersonalityApprecationTest"
+    PERSONALITY_VALUES = "TEST PersonalityValuesTest"
+
+
+class Stand(EnumValuesMixin, StrEnum):
+    DEV = "dev"
+    TEST = "test"

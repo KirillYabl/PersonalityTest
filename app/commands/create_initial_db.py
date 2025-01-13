@@ -4,6 +4,7 @@ from sqlalchemy import delete, func, select
 from commands.command import Command
 from db.database import get_db_session, transaction
 from db.tables import Question, QuestionAnswer, QuestionTopic, QuestionType, Quiz, QuizAttempt, QuizType, User
+from resources.schema_constants import QuizTypeName
 from tests.factories import (
     QuestionFactory,
     QuestionTopicFactory,
@@ -28,10 +29,10 @@ class CreateInitialDB(Command):
 
                 objects = []
 
-                personality_test_type = QuizTypeFactory.build(name="PersonalityTest")
-                personality_character_test_type = QuizTypeFactory.build(name="PersonalityCharacterTest")
-                personality_apprecation_test_type = QuizTypeFactory.build(name="PersonalityApprecationTest")
-                personality_values_test_type = QuizTypeFactory.build(name="PersonalityValuesTest")
+                personality_test_type = QuizTypeFactory.build(name="TEST PersonalityTest")
+                personality_character_test_type = QuizTypeFactory.build(name=QuizTypeName.PERSONALITY_CHARACTER)
+                personality_apprecation_test_type = QuizTypeFactory.build(name=QuizTypeName.PERSONALITY_APPRECATION)
+                personality_values_test_type = QuizTypeFactory.build(name=QuizTypeName.PERSONALITY_VALUES)
 
                 persona_test = QuizFactory.build(name="TEST Тест личности", parent=None, type=personality_test_type)
                 character_test = QuizFactory.build(
@@ -271,6 +272,7 @@ class CreateInitialDB(Command):
                     delete(QuestionType).where(QuestionType.name.startswith("TEST")),
                     delete(QuestionTopic).where(QuestionTopic.name.startswith("TEST")),
                     delete(Quiz).where(Quiz.name.startswith("TEST")),
+                    delete(QuizType).where(QuizType.name.startswith("TEST")),
                     delete(User).where(User.tg_user_id < 0),
                 ]
                 for statement in statements:
